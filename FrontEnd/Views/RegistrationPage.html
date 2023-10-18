@@ -5,18 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Sign Up Form by Colorlib</title>
-
-    <link rel="stylesheet" href="fonts/material-icon/css/material-design-iconic-font.min.css">
-
-    <link rel="stylesheet" href="../Public/css/style.css">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/css/style.css">
     <meta name="robots" content="noindex, follow">
-    <script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"
-        nonce="4ffd2c24-4a59-4622-9c75-c98e6503b5e0"></script>
-    <script defer="" referrerpolicy="origin"
-        src="/cdn-cgi/zaraz/s.js?z=JTdCJTIyZXhlY3V0ZWQlMjIlM0ElNUIlNUQlMkMlMjJ0JTIyJTNBJTIyU2lnbiUyMFVwJTIwRm9ybSUyMGJ5JTIwQ29sb3JsaWIlMjIlMkMlMjJ4JTIyJTNBMC4wMjM4NDE1MzgwNDUyMjEwNDUlMkMlMjJ3JTIyJTNBMTM2NiUyQyUyMmglMjIlM0E3NjglMkMlMjJqJTIyJTNBNjQzJTJDJTIyZSUyMiUzQTEzNjYlMkMlMjJsJTIyJTNBJTIyaHR0cHMlM0ElMkYlMkZjb2xvcmxpYi5jb20lMkZldGMlMkZyZWdmb3JtJTJGY29sb3JsaWItcmVnZm9ybS03JTJGJTIyJTJDJTIyciUyMiUzQSUyMmh0dHBzJTNBJTJGJTJGY29sb3JsaWIuY29tJTJGd3AlMkZ0ZW1wbGF0ZSUyRmNvbG9ybGliLXJlZ2Zvcm0tNyUyRiUyMiUyQyUyMmslMjIlM0EyNCUyQyUyMm4lMjIlM0ElMjJVVEYtOCUyMiUyQyUyMm8lMjIlM0EtMzMwJTJDJTIycSUyMiUzQSU1QiU3QiUyMm0lMjIlM0ElMjJzZXQlMjIlMkMlMjJhJTIyJTNBJTVCJTIyMCUyMiUyQyUyMmNvbmZpZyUyMiUyQyU3QiUyMnNjb3BlJTIyJTNBJTIycGFnZSUyMiU3RCU1RCU3RCUyQyU3QiUyMm0lMjIlM0ElMjJzZXQlMjIlMkMlMjJhJTIyJTNBJTVCJTIyMSUyMiUyQyUyMlVBLTIzNTgxNTY4LTEzJTIyJTJDJTdCJTIyc2NvcGUlMjIlM0ElMjJwYWdlJTIyJTdEJTVEJTdEJTVEJTdE"></script>
-    <script
-        nonce="4ffd2c24-4a59-4622-9c75-c98e6503b5e0">(function (w, d) { !function (t, u, v, w) { t[v] = t[v] || {}; t[v].executed = []; t.zaraz = { deferred: [], listeners: [] }; t.zaraz.q = []; t.zaraz._f = function (x) { return async function () { var y = Array.prototype.slice.call(arguments); t.zaraz.q.push({ m: x, a: y }) } }; for (const z of ["track", "set", "debug"]) t.zaraz[z] = t.zaraz._f(z); t.zaraz.init = () => { var A = u.getElementsByTagName(w)[0], B = u.createElement(w), C = u.getElementsByTagName("title")[0]; C && (t[v].t = u.getElementsByTagName("title")[0].text); t[v].x = Math.random(); t[v].w = t.screen.width; t[v].h = t.screen.height; t[v].j = t.innerHeight; t[v].e = t.innerWidth; t[v].l = t.location.href; t[v].r = u.referrer; t[v].k = t.screen.colorDepth; t[v].n = u.characterSet; t[v].o = (new Date).getTimezoneOffset(); if (t.dataLayer) for (const G of Object.entries(Object.entries(dataLayer).reduce(((H, I) => ({ ...H[1], ...I[1] })), {}))) zaraz.set(G[0], G[1], { scope: "page" }); t[v].q = []; for (; t.zaraz.q.length;) { const J = t.zaraz.q.shift(); t[v].q.push(J) } B.defer = !0; for (const K of [localStorage, sessionStorage]) Object.keys(K || {}).filter((M => M.startsWith("_zaraz_"))).forEach((L => { try { t[v]["z_" + L.slice(7)] = JSON.parse(K.getItem(L)) } catch { t[v]["z_" + L.slice(7)] = K.getItem(L) } })); B.referrerPolicy = "origin"; B.src = "/cdn-cgi/zaraz/s.js?z=" + btoa(encodeURIComponent(JSON.stringify(t[v]))); A.parentNode.insertBefore(B, A) };["complete", "interactive"].includes(u.readyState) ? zaraz.init() : t.addEventListener("DOMContentLoaded", zaraz.init) }(w, d, "zarazData", "script"); })(window, document);</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"
+        integrity="sha512-emSwuKiMyYedRwflbZB2ghzX8Cw8fmNVgZ6yQNNXXagFzFOaQmbvQ1vmDkddHjm5AITcBIZfC7k4ShQSjgPAmQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -59,30 +53,14 @@
                         </form>
                     </div>
                     <div class="signup-image">
-                        <figure><img src="../Public/img/signup-image.jpg" alt="sing up image"></figure>
+                        <figure><img src="/img/signup-image.jpg" alt="sing up image"></figure>
                         <a href="#" class="signup-image-link">I am already member</a>
                     </div>
                 </div>
             </div>
         </section>
     </div>
-
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="js/main.js"></script>
-
-    <script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-23581568-13"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-
-        gtag('config', 'UA-23581568-13');
-    </script>
-    <script defer=""
-        src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317"
-        integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA=="
-        data-cf-beacon="{&quot;rayId&quot;:&quot;817e4d837d6a1bd1&quot;,&quot;version&quot;:&quot;2023.10.0&quot;,&quot;token&quot;:&quot;cd0b4b3a733644fc843ef0b185f98241&quot;}"
-        crossorigin="anonymous"></script>
+    <script src="/Scripts/RegistrationScript.js"></script>
 
 </body>
 
