@@ -1,6 +1,14 @@
 const userModel = require("../Models/UserModel");
 const bcrypt = require('bcrypt');
 const sequelize = require("../dbConnect");
+const path = require('path');
+module.exports.getRegistrationPage = (req, res) => {
+    res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'RegistrationPage.html'))
+}
+
+module.exports.getLoginPage = (req, res) => {
+    res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'LoginPage.html'))
+}
 
 module.exports.RegisterUser = async (req, res) => {
     const newName = req.body.nameInput;
