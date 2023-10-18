@@ -1,7 +1,13 @@
 const bodyParser = require('body-parser');
 const express = require('express');
+const cors = require('cors');
 const app = express();
 require('dotenv').config();
+app.use(cors({
+    origin: "*",
+    credentials: true,
+    methods: ['GET', 'POST']
+}))
 const path = require('path');
 const sequelize = require('./dbConnect');
 const userRouter = require('./Routes/userRoutes');

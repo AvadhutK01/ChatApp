@@ -24,19 +24,19 @@ document.getElementById("register-form").addEventListener("submit", async functi
 
             const data = response.data;
             if (data.message === "success") {
-                alert('Success')
+                alert('User Successfully Registerd please login')
                 window.location = '/user/login';
             }
         } catch (error) {
             if (error.response.data.message) {
                 if (error.response.data.message === "exist") {
-                    alert('User Exist')
+                    alert('User Already Exist Please Login!')
                 } else {
-                    alert('Error')
+                    alert(error.response.data.message)
                 }
             }
             else {
-                alert('Error')
+                alert('Something went wrong!')
             }
             console.log(error)
         }
