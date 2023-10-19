@@ -7,6 +7,7 @@ const path = require('path');
 const sequelize = require('./dbConnect');
 const userRouter = require('./Routes/userRoutes');
 const router = require('./Routes/indexRoute');
+const chatRouter = require('./Routes/chatRoute');
 app.use(cors({
     origin: "*",
     credentials: true,
@@ -15,6 +16,7 @@ app.use(cors({
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(router);
-app.use("/user", userRouter)
+app.use("/user", userRouter);
+app.use('/chat', chatRouter);
 app.use(express.static(path.join(__dirname, '..', 'FrontEnd', 'Public')));
 sequelize.sync().then(() => app.listen(4000))

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chat-list {
+            height: 100%;
+            /* Set a fixed height for the chat list */
+            max-width: 300px;
+            overflow-y: auto;
+            /* Add overflow-y property for scrolling if content overflows the fixed height */
+        }
+
+        .chat-box {
+            height: 100%;
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        body,
+        html {
+            height: 100%;
+        }
+
+        .sticky-message-box {
+            float: inline-end;
+            bottom: 0;
+            width: 100%;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 h-full">
+    <section class="py-4 px-4 bg-purple-200 rounded-t-lg h-full">
+        <div class="container mx-auto h-full">
+            <div class="lg:flex h-full">
+                <div class="lg:w-1/2 mb-4 lg:mb-0 chat-list" id="chatDiv">
+                    <div class="p-3 bg-white rounded chat-box overflow-y-auto flex-1">
+                        <div class="mb-3">
+                            <input type="search" class="form-control rounded w-full" placeholder="Search">
+                        </div>
+                        <ul class="list-unstyled chat-list overflow-y-auto h-80" id="chat-list">
+                        </ul>
+                    </div>
+                </div>
+                <div class="lg:w-full chat-box d-flex flex-column overflow-y-auto" style="height: 104%;">
+                    <div class="mb-4 lg:mb-0 flex-1">
+                        <div class="p-3 bg-white rounded chat-box overflow-y-auto flex-1" id="myChatId"
+                            style="display: none;">
+                            <div class="p-3 bg-white rounded-bottom" id="myChatDiv">
+                                <div id="myChatMessage">
+                                </div>
+                                <section class="sticky-message-box">
+                                    <div class="text-muted d-flex items-center mt-2">
+                                        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
+                                            alt="avatar 3" class="w-10 h-10 rounded-full">
+                                        <input type="text" class="form-control form-control-lg ms-3 flex-1 text-sm"
+                                            id="messageInput" placeholder="Type message">
+                                        <!-- <a href="#!" class="ms-3 text-muted"><i class="fas fa-paperclip"></i></a>
+                                        <a href="#!" class="ms-3 text-muted"><i class="fas fa-smile"></i></a> -->
+                                        <a href="#!" class="ms-3"><i class="fas fa-paper-plane"></i></a>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="/Scripts/ChatScript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+
+</html>

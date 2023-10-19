@@ -589,17 +589,82 @@ label.valid:after {
     }
 }
 
-@media screen and (max-width: 400px) {
-    .social-login {
-        flex-direction: column;
-        -moz-flex-direction: column;
-        -webkit-flex-direction: column;
-        -o-flex-direction: column;
-        -ms-flex-direction: column
-    }
+/* style.css */
 
-    .social-label {
-        margin-right: 0;
-        margin-bottom: 10px
+/* Common styles for chat buttons */
+.chat-button {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 10px 15px;
+    margin: 10px;
+    width: 90%;
+    text-align: left;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    /* Prevent long text from overflowing */
+}
+
+.chat-button:hover {
+    background-color: #f8f9fa;
+    border-color: #b0c0cb;
+}
+
+.chat-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+.chat-button img {
+    border-radius: 50%;
+}
+
+.chat-button .badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+/* Positioning message input field at the bottom of the chat */
+#messageDiv {
+    position: absolute;
+    bottom: 0;
+    width: calc(100% - 65px);
+    left: 10px;
+    margin: 10px;
+}
+
+/* Media queries for responsiveness */
+@media screen and (max-width: 768px) {
+    .chat-button {
+        width: 100%;
+        /* Take up full width on smaller screens */
     }
 }
+
+@media screen and (max-width: 576px) {
+    .chat-button {
+        font-size: 14px;
+        /* Decrease font size for smaller screens */
+    }
+
+    #messageDiv {
+        width: calc(100% - 50px);
+        /* Adjust width of message input field */
+        left: 5px;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    .chat-button {
+        padding: 8px 12px;
+        /* Adjust padding for smaller screens */
+    }
+
+    #messageDiv {
+        width: calc(100% - 45px);
+        /* Further adjust width of message input field */
+        left: 3px;
+    }
+}
+
+/* Add more media queries as needed for specific screen sizes */
