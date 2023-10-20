@@ -3,82 +3,116 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no,viewport-fit=cover">
+    <title>Chat App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"
+        integrity="sha512-emSwuKiMyYedRwflbZB2ghzX8Cw8fmNVgZ6yQNNXXagFzFOaQmbvQ1vmDkddHjm5AITcBIZfC7k4ShQSjgPAmQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
     <style>
-        .chat-list {
+        body {
+            width: 100%;
             height: 100%;
-            /* Set a fixed height for the chat list */
-            max-width: 300px;
+            background-color: #f8fafc;
+        }
+
+        .chat-list {
+            height: calc(92vh - 56px);
             overflow-y: auto;
-            /* Add overflow-y property for scrolling if content overflows the fixed height */
+        }
+
+        @media (max-width: 800px) {
+            .chat-box {
+                display: none;
+            }
+
+            .chat-list {
+                height: calc(100vh - 56px);
+            }
         }
 
         .chat-box {
-            height: 100%;
-            max-height: 100%;
+            height: calc(87vh - 56px);
+        }
+
+        .chat-box-content {
+            height: calc(100% - 56px);
             overflow-y: auto;
         }
 
-        body,
-        html {
-            height: 100%;
-        }
-
-        .sticky-message-box {
-            float: inline-end;
-            bottom: 0;
-            width: 100%;
-            background-color: #fff;
-            border-top: 1px solid #ccc;
+        .fixed {
+            z-index: 999;
         }
     </style>
 </head>
 
-<body class="bg-gray-100 h-full">
-    <section class="py-4 px-4 bg-purple-200 rounded-t-lg h-full">
-        <div class="container mx-auto h-full">
-            <div class="lg:flex h-full">
-                <div class="lg:w-1/2 mb-4 lg:mb-0 chat-list" id="chatDiv">
-                    <div class="p-3 bg-white rounded chat-box overflow-y-auto flex-1">
-                        <div class="mb-3">
-                            <input type="search" class="form-control rounded w-full" placeholder="Search">
-                        </div>
-                        <ul class="list-unstyled chat-list overflow-y-auto h-80" id="chat-list">
-                        </ul>
+<body class="bg-gray-100">
+    <header class="bg-purple-500 text-white text-center py-2 fixed top-0 w-full">
+        Chat App
+    </header>
+    <div class="pt-16 w-full">
+        <div class="container mx-auto flex flex-col lg:flex-row">
+            <div class="lg:w-1/3 chat-list border-r border-gray-300" id="chat-div">
+                <div class="p-4 bg-white rounded">
+                    <input type="search" class="form-control rounded mb-4" placeholder="Search">
+                    <div class="fixed bottom-10">
+                        <button class="bg-purple-500 text-white py-2 px-3 mb-3 rounded-circle shadow-lg"
+                            id="add-member">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <ul class="list-unstyled chat-list overflow-y-auto h-96" id="chat-list">
+                    </ul>
+                </div>
+            </div>
+            <div class="lg:w-2/3 chat-box" id="myChatId">
+                <div class="p-4 bg-white rounded chat-box-content" id="chat-box-content">
+                </div>
+                <div class="p-4 bg-white sticky bottom-0">
+                    <div class="flex items-center">
+                        <input type="text" class="form-control flex-1 mr-4" placeholder="Type message"
+                            namem="messageText" id="messageText">
+                        <button class="bg-purple-500 text-white py-2 px-4 rounded" id="btnMessageSubmit"><i
+                                class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
-                <div class="lg:w-full chat-box d-flex flex-column overflow-y-auto" style="height: 104%;">
-                    <div class="mb-4 lg:mb-0 flex-1">
-                        <div class="p-3 bg-white rounded chat-box overflow-y-auto flex-1" id="myChatId"
-                            style="display: none;">
-                            <div class="p-3 bg-white rounded-bottom" id="myChatDiv">
-                                <div id="myChatMessage">
-                                </div>
-                                <section class="sticky-message-box">
-                                    <div class="text-muted d-flex items-center mt-2">
-                                        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
-                                            alt="avatar 3" class="w-10 h-10 rounded-full">
-                                        <input type="text" class="form-control form-control-lg ms-3 flex-1 text-sm"
-                                            id="messageInput" placeholder="Type message">
-                                        <!-- <a href="#!" class="ms-3 text-muted"><i class="fas fa-paperclip"></i></a>
-                                        <a href="#!" class="ms-3 text-muted"><i class="fas fa-smile"></i></a> -->
-                                        <a href="#!" class="ms-3"><i class="fas fa-paper-plane"></i></a>
-                                    </div>
-                                </section>
+            </div>
+            <div class="modal fade" id="memberModal" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Add Contact</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="contactName">Contact Name:</label>
+                                <input type="text" class="form-control" id="contactName"
+                                    placeholder="Enter contact name">
                             </div>
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone Number:</label>
+                                <input type="number" class="form-control" id="phoneNumber"
+                                    placeholder="Enter phone number">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="btnModalClose">Close</button>
+                            <button type="button" class="btn btn-primary" id="btnMemberSubmit">Save Contact</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-    <script src="/Scripts/ChatScript.js"></script>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="/Scripts/ChatScript.js"></script>
 </body>
 
 </html>

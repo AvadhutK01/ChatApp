@@ -24,5 +24,9 @@ const user = sequelize.define('userData', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    lastSeen: {
+        type: Sequelize.STRING,
+        allowNull: false
+    }
 });
 module.exports = user;

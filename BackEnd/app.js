@@ -8,6 +8,9 @@ const sequelize = require('./dbConnect');
 const userRouter = require('./Routes/userRoutes');
 const router = require('./Routes/indexRoute');
 const chatRouter = require('./Routes/chatRoute');
+const user = require('./Models/UserModel');
+const ChatMembersData = require('./Models/chatMembersModel');
+const chatStorageDb = require('./Models/chatStorageModel');
 app.use(cors({
     origin: "*",
     credentials: true,
@@ -15,6 +18,10 @@ app.use(cors({
 }))
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+user.hasMany(ChatMembersData);
+ChatMembersData.belongsTo(user);
+user.hasMany(chatStorageDb);
+chatStorageDb.belongsTo(user);
 app.use(router);
 app.use("/user", userRouter);
 app.use('/chat', chatRouter);

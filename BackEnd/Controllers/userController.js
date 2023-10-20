@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const sequelize = require("../dbConnect");
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const moment = require("moment/moment");
 module.exports.getRegistrationPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'RegistrationPage.html'))
 }
@@ -11,19 +12,23 @@ module.exports.getLoginPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'LoginPage.html'))
 }
 
+
 module.exports.RegisterUser = async (req, res) => {
     const newName = req.body.nameInput;
     const newPhoneNO = req.body.phoneInput;
     const newEmail = req.body.emailInput;
     const newPasswordInput = req.body.passwordInput;
+
     const transaction = await sequelize.transaction();
     try {
         const hashedPassword = await bcrypt.hash(newPasswordInput, 10);
+        const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
         await userModel.create({
             name: newName,
             phoneNO: newPhoneNO,
             email: newEmail,
-            password: hashedPassword
+            password: hashedPassword,
+            lastSeen: currentDateTime,
         }, { transaction });
 
         await transaction.commit();
@@ -55,6 +60,9 @@ module.exports.verifyLogin = async (req, res) => {
         if (data) {
             const checkLogin = await bcrypt.compare(password, data.password);
             if (checkLogin) {
+                const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
+                await userModel.update({ lastSeen: currentDateTime }, { where: { id: data.id }, transaction: t });
+
                 await t.commit();
                 res.status(201).json({ message: 'success', token: generateAccessToken(data.id) });
             } else {
@@ -71,6 +79,7 @@ module.exports.verifyLogin = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }
+
 function generateAccessToken(id) {
     return jwt.sign({ userid: id }, process.env.SECRETKEY);
 }
