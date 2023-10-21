@@ -65,8 +65,9 @@ btnMessageSubmit.addEventListener('click', async () => {
     }
 });
 
-async function displayList(chatlist, chatBoxContent, data) {
-    chatlist.innerHTML = "";
+async function displayList(chatlist, data) {
+    const existingItems = Array.from(chatlist.children);
+
     for (let i = 0; i < data.length; i++) {
         const latestMessage = await getLatestMessage(data[i].memberId);
         const latestMessageDate = moment(latestMessage.date, 'DD/MM/YYYY, hh:mm A');
@@ -79,9 +80,7 @@ async function displayList(chatlist, chatBoxContent, data) {
             displayDateTime = latestMessageDate.format('DD/MM/YYYY');
         }
 
-        let li = document.createElement('li');
-        li.className = "p-2 border-bottom d-flex justify-content-between align-items-center";
-        let button = document.createElement('button');
+        let button = existingItems[i] ? existingItems[i].querySelector('.chat-button') : document.createElement('button');
         button.className = 'd-flex justify-content-between align-items-center chat-button w-100';
         button.innerHTML = `<div class="d-flex justify-content-between align-items-center w-100">
             <div class="d-flex flex-row items-center">
@@ -98,6 +97,14 @@ async function displayList(chatlist, chatBoxContent, data) {
                 <div class="text-xs text-gray-500 mb-1">${displayDateTime}</div>
             </div>
         </div>`;
+
+        if (!existingItems[i]) {
+            let li = document.createElement('li');
+            li.className = "p-2 border-bottom d-flex justify-content-between align-items-center";
+            li.appendChild(button);
+            chatlist.appendChild(li);
+        }
+        button.removeEventListener('click', () => { });
         button.addEventListener('click', async () => {
             var chatDiv = document.getElementById('chat-div');
             var secondSection = document.getElementById("myChatId");
@@ -112,17 +119,18 @@ async function displayList(chatlist, chatBoxContent, data) {
             }
             await fetchChat(data[i].memberId);
         });
-
-        li.appendChild(button);
-        chatlist.appendChild(li);
+    }
+    for (let i = data.length; i < existingItems.length; i++) {
+        chatlist.removeChild(existingItems[i].parentNode);
     }
 }
+
 
 async function getLatestMessage(memberId) {
     const chatMessages = await getChatMessagesForMemberId(memberId);
     chatMessages.sort((a, b) => {
-        const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm A');
-        const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm A');
+        const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
+        const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:Ss A');
         return dateB - dateA;
     });
     return chatMessages[0];
@@ -142,6 +150,7 @@ async function fetchChat(memberId) {
 function displayChatBox(chatBoxContent, data, memberId) {
     chatBoxContent.innerHTML = '';
     for (let i = 0; i < data.length; i++) {
+        const formattedDate = moment(data[i].date, 'DD/MM/YYYY, hh:mm:ss A').format('DD/MM/YYYY | hh:mm A');
         if (data[i].recipeintId == memberId) {
             const div = document.createElement('div');
             div.className = 'message';
@@ -149,7 +158,7 @@ function displayChatBox(chatBoxContent, data, memberId) {
                 <div class="d-flex flex-row justify-content-end pb-2">
                     <div class="bg-gray-200 p-2 rounded-md ms-3">
                         <p class="text-xs">${data[i].messageText}</p>
-                        <p class="text-xs text-gray-500 float-right">${data[i].date}</p>
+                        <p class="text-xs text-gray-500 float-right">${formattedDate}</p>
                     </div>
                     <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                         alt="avatar 1" class="w-12 h-12 rounded-full">
@@ -165,7 +174,7 @@ function displayChatBox(chatBoxContent, data, memberId) {
                         alt="avatar 1" class="w-12 h-12 rounded-full">
                     <div class="bg-gray-200 p-2 rounded-md ms-3">
                         <p class="text-xs">${data[i].messageText}</p>
-                        <p class="text-xs text-gray-500 float-right">${data[i].date}</p>
+                        <p class="text-xs text-gray-500 float-right">${formattedDate}</p>
                     </div>
                 </div>
             `;
@@ -182,7 +191,7 @@ async function fetchList() {
                 "Authorization": token
             }
         });
-        displayList(chatlist, chatBoxContent, result.data);
+        displayList(chatlist, result.data);
     } catch (error) {
         console.log(error);
     }
@@ -220,6 +229,14 @@ async function getChatMessagesForMemberId(memberId) {
         return response.data;
     } catch (error) {
         console.error(error);
-        return []; // Return an empty array or handle the error based on your requirements
+        return [];
     }
 }
+
+setInterval(async () => {
+    await fetchList();
+    const storedIV = new Uint8Array(JSON.parse(localStorage.getItem('IV')));
+    const storedEncryptedArray = new Uint8Array(JSON.parse(localStorage.getItem('EncryptedData')));
+    const decryptedData = await decryptData({ iv: storedIV, encryptedArray: storedEncryptedArray }, key);
+    await fetchChat(decryptedData);
+}, 1000)

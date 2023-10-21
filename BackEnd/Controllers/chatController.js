@@ -42,7 +42,7 @@ module.exports.addContact = async (req, res) => {
 }
 module.exports.addMessage = async (req, res) => {
     try {
-        const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
+        const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A');
         const messageText = req.body.data.messageText;
         const memberId = parseInt(req.body.data.memberId);
         const senderId = req.user.id;
@@ -77,8 +77,8 @@ module.exports.getChat = async (req, res) => {
         });
         let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition);
         combinedChatList.sort((a, b) => {
-            const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm A');
-            const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm A');
+            const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
+            const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');
             return dateA - dateB;
 
         });
