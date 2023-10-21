@@ -10,7 +10,7 @@ module.exports.getMain = (req, res) => {
 module.exports.getChatList = async (req, res) => {
     const id = req.user.id;
     try {
-        let chatlist = await ChatMembersData.findAll({ userDatumId: id });
+        let chatlist = await ChatMembersData.findAll({ where: { userDatumId: id } });
         if (!chatlist) {
             throw new Error("No chats found");
         }
@@ -24,7 +24,12 @@ module.exports.addContact = async (req, res) => {
         const id = req.user.id;
         const contact_name = req.body.data.name;
         const phone_number = req.body.data.phone_number;
-        let memberId = await user.findOne({ phoneNO: phone_number });
+        console.log(phone_number)
+        let memberId = await user.findOne({
+            where: {
+                phoneNO: phone_number
+            }
+        });
         let parsedMemberId = parseInt(memberId.id);
         await ChatMembersData.create({
             ContactName: contact_name,
@@ -56,8 +61,33 @@ module.exports.addMessage = async (req, res) => {
 
 module.exports.getChat = async (req, res) => {
     try {
+        const userId = parseInt(req.user.id);
+        const memberId = parseInt(req.body.memberId);
+        let chatListFirstCondition = await chatStorageDb.findAll({
+            where: {
+                recipeintId: memberId,
+                userDatumId: userId
+            }
+        });
+        let chatListSecondCondition = await chatStorageDb.findAll({
+            where: {
+                recipeintId: userId,
+                userDatumId: memberId
+            }
+        });
+        let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition);
+        combinedChatList.sort((a, b) => {
+            const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm A');
+            const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm A');
+            return dateA - dateB;
 
+        });
+
+        res.status(200).json(combinedChatList);
     } catch (error) {
-
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+
+

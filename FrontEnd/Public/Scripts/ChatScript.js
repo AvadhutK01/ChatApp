@@ -57,17 +57,28 @@ btnMessageSubmit.addEventListener('click', async () => {
             headers: {
                 'Authorization': localStorage.getItem('token')
             }
-        })
+        });
+        await fetchChat(decryptedData);
         messageText.value = '';
     } catch (error) {
         console.log(error)
     }
-
 });
 
-function displayList(chatlist, chatBoxContent, data) {
+async function displayList(chatlist, chatBoxContent, data) {
     chatlist.innerHTML = "";
     for (let i = 0; i < data.length; i++) {
+        const latestMessage = await getLatestMessage(data[i].memberId);
+        const latestMessageDate = moment(latestMessage.date, 'DD/MM/YYYY, hh:mm A');
+        const currentDate = moment();
+        let displayDateTime;
+
+        if (latestMessageDate.isSame(currentDate, 'day')) {
+            displayDateTime = latestMessageDate.format('hh:mm A');
+        } else {
+            displayDateTime = latestMessageDate.format('DD/MM/YYYY');
+        }
+
         let li = document.createElement('li');
         li.className = "p-2 border-bottom d-flex justify-content-between align-items-center";
         let button = document.createElement('button');
@@ -78,15 +89,13 @@ function displayList(chatlist, chatBoxContent, data) {
                     alt="avatar" class="me-3 rounded-full" width="60">
                 <div class="pb-5">
                     <p class="font-semibold mb-0 position-fixed">${data[i].ContactName}</p>
-                    </div>
-                    <div class="pt-4">
-                    <p class="text-xs text-gray-500">kdjkfjskjkfasdsdf</p>
-                    </div>
-                    
+                </div>
+                <div class="pt-4">
+                    <p class="text-xs text-gray-500">${latestMessage.messageText}</p>
+                </div>
             </div>
             <div class="d-flex flex-column align-items-end contact-info">
-                <div class="text-xs text-gray-500 mb-1">Just now</div>
-                <span class="badge bg-danger rounded-full">3</span>
+                <div class="text-xs text-gray-500 mb-1">${displayDateTime}</div>
             </div>
         </div>`;
         button.addEventListener('click', async () => {
@@ -101,7 +110,7 @@ function displayList(chatlist, chatBoxContent, data) {
             if (secondSection.style.display === "none" || secondSection.style.display === "") {
                 secondSection.style.display = "block";
             }
-            displayChatBox(chatBoxContent);
+            await fetchChat(data[i].memberId);
         });
 
         li.appendChild(button);
@@ -109,38 +118,57 @@ function displayList(chatlist, chatBoxContent, data) {
     }
 }
 
+async function getLatestMessage(memberId) {
+    const chatMessages = await getChatMessagesForMemberId(memberId);
+    chatMessages.sort((a, b) => {
+        const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm A');
+        const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm A');
+        return dateB - dateA;
+    });
+    return chatMessages[0];
+}
 
+async function fetchChat(memberId) {
+    const result = await axios.post('/chat/get-chat', {
+        memberId: memberId
+    }, {
+        headers: {
+            'Authorization': localStorage.getItem('token')
+        }
+    });
+    displayChatBox(chatBoxContent, result.data, memberId);
+}
 
-function displayChatBox(chatBoxContent) {
+function displayChatBox(chatBoxContent, data, memberId) {
     chatBoxContent.innerHTML = '';
-    for (let i = 0; i < 15; i++) {
-        if (i == 4) {
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].recipeintId == memberId) {
             const div = document.createElement('div');
             div.className = 'message';
             div.innerHTML = ` 
-                    <div class="d-flex flex-row justify-content-end pb-2">
+                <div class="d-flex flex-row justify-content-end pb-2">
                     <div class="bg-gray-200 p-2 rounded-md ms-3">
-                    <p class="text-xs">hii</p>
-                    <p class="text-xs text-gray-500 float-right">12:00 PM | Aug 13</p>
+                        <p class="text-xs">${data[i].messageText}</p>
+                        <p class="text-xs text-gray-500 float-right">${data[i].date}</p>
                     </div>
                     <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                         alt="avatar 1" class="w-12 h-12 rounded-full">
-                   </div>
-           `;
+                </div>
+            `;
             chatBoxContent.appendChild(div);
         } else {
             const div = document.createElement('div');
             div.className = 'message';
             div.innerHTML = ` 
-                    <div class="d-flex flex-row justify-content-start pb-2">
+                <div class="d-flex flex-row justify-content-start pb-2">
                     <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                         alt="avatar 1" class="w-12 h-12 rounded-full">
                     <div class="bg-gray-200 p-2 rounded-md ms-3">
-                    <p class="text-xs">hii</p>
-                    <p class="text-xs text-gray-500 float-right">12:00 PM | Aug 13</p>
+                        <p class="text-xs">${data[i].messageText}</p>
+                        <p class="text-xs text-gray-500 float-right">${data[i].date}</p>
                     </div>
-                   </div>
-           `;
+                </div>
+            `;
             chatBoxContent.appendChild(div);
         }
     }
@@ -180,4 +208,18 @@ async function decryptData({ iv, encryptedArray }, key) {
     const decryptedBuffer = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedArray);
     const decryptedData = new TextDecoder().decode(decryptedBuffer);
     return decryptedData;
+}
+async function getChatMessagesForMemberId(memberId) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post('/chat/get-chat', { memberId: memberId }, {
+            headers: {
+                'Authorization': token
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return []; // Return an empty array or handle the error based on your requirements
+    }
 }
