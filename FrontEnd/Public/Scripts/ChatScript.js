@@ -5,6 +5,7 @@ let addMemberButton = document.getElementById('add-member');
 let memberModal = document.getElementById('memberModal');
 let modalCloseButton = document.getElementById('btnModalClose');
 let key;
+let flag = false;
 document.addEventListener("DOMContentLoaded", async function () {
     try {
         await fetchList();
@@ -59,6 +60,7 @@ btnMessageSubmit.addEventListener('click', async () => {
             }
         });
         await fetchChat(decryptedData);
+        await fetchList();
         messageText.value = '';
     } catch (error) {
         console.log(error)
@@ -117,15 +119,15 @@ async function displayList(chatlist, data) {
             if (secondSection.style.display === "none" || secondSection.style.display === "") {
                 secondSection.style.display = "block";
             }
+            flag = true;
             await fetchChat(data[i].memberId);
+            startChatInterval(data[i].memberId)
         });
     }
     for (let i = data.length; i < existingItems.length; i++) {
         chatlist.removeChild(existingItems[i].parentNode);
     }
 }
-
-
 async function getLatestMessage(memberId) {
     const chatMessages = await getChatMessagesForMemberId(memberId);
     chatMessages.sort((a, b) => {
@@ -144,7 +146,10 @@ async function fetchChat(memberId) {
             'Authorization': localStorage.getItem('token')
         }
     });
-    displayChatBox(chatBoxContent, result.data, memberId);
+    const jsonData = JSON.stringify(result.data);
+    localStorage.setItem(memberId, jsonData);
+    const data = JSON.parse(localStorage.getItem(memberId));
+    displayChatBox(chatBoxContent, data, memberId);
 }
 
 function displayChatBox(chatBoxContent, data, memberId) {
@@ -232,11 +237,29 @@ async function getChatMessagesForMemberId(memberId) {
         return [];
     }
 }
+let chatInterval;
 
-setInterval(async () => {
-    await fetchList();
-    const storedIV = new Uint8Array(JSON.parse(localStorage.getItem('IV')));
-    const storedEncryptedArray = new Uint8Array(JSON.parse(localStorage.getItem('EncryptedData')));
-    const decryptedData = await decryptData({ iv: storedIV, encryptedArray: storedEncryptedArray }, key);
-    await fetchChat(decryptedData);
-}, 1000)
+async function startChatInterval(memberId) {
+    if (flag) {
+        clearInterval(chatInterval);
+        chatInterval = setInterval(async function () {
+            try {
+                const data = await getDataFromLocalStorage(memberId);
+                displayChatBox(chatBoxContent, data, memberId);
+            } catch (error) {
+                console.error(error);
+            }
+        }, 1000);
+    }
+}
+
+function getDataFromLocalStorage(memberId) {
+    return new Promise((resolve, reject) => {
+        const data = localStorage.getItem(memberId);
+        if (data) {
+            resolve(JSON.parse(data));
+        } else {
+            reject(new Error("Data not found in localStorage"));
+        }
+    });
+}

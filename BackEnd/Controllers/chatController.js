@@ -67,20 +67,25 @@ module.exports.getChat = async (req, res) => {
             where: {
                 recipeintId: memberId,
                 userDatumId: userId
-            }
+            },
+            order: [['date', 'DESC']],
+            limit: 5
         });
+
         let chatListSecondCondition = await chatStorageDb.findAll({
             where: {
                 recipeintId: userId,
                 userDatumId: memberId
-            }
+            },
+            order: [['date', 'DESC']],
+            limit: 5
         });
+
         let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition);
         combinedChatList.sort((a, b) => {
             const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
             const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');
             return dateA - dateB;
-
         });
 
         res.status(200).json(combinedChatList);
