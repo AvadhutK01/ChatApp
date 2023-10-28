@@ -35,7 +35,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick }) => {
                 console.log(error)
             }
             finally {
-                setTimeout(fetchLatestMessages, 1000);
+                // setTimeout(fetchLatestMessages, 1000);
             }
         };
 
@@ -73,11 +73,6 @@ const ChatList = ({ chats, onChatClick, onMenuClick }) => {
             return [];
         }
     };
-    // let chatInterval;
-    // async function startChatInterval(chatId) {
-    //     clearInterval(chatInterval);
-
-    // }
     return (
         <div className="lg:w-1/3 chat-list border-r border-gray-300" id="chat-div">
             <div className="p-4 bg-white rounded">

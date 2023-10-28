@@ -16,7 +16,6 @@ const ChatMain = () => {
     const [type, setType] = useState('');
     const [isListOpen, setIsLIstOpen] = useState(false);
     const [MemberList, setMembersList] = useState([]);
-    // const [ListMemberId,setListMemberId]=useState('');
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -45,6 +44,7 @@ const ChatMain = () => {
         try {
             setType(type);
             await fetchChat(chatId);
+            // startChatInterval(chatId)
             setDisplayName(displayName);
         } catch (err) {
             console.log(err);
@@ -106,7 +106,6 @@ const ChatMain = () => {
                 'Authorization': localStorage.getItem('token')
             }
         });
-        // await fetchChat(memberId);
     }
 
     const handleGroupNameChange = (e) => {
@@ -147,7 +146,6 @@ const ChatMain = () => {
                     'Authorization': localStorage.getItem('token')
                 }
             });
-            // console.log(result)
             if (result) {
                 const jsonData = JSON.stringify(result.data);
                 localStorage.setItem(`${chatId}one`, jsonData);
@@ -167,7 +165,6 @@ const ChatMain = () => {
                     'Authorization': localStorage.getItem('token')
                 }
             });
-            console.log(result)
             if (result) {
                 const jsonData = JSON.stringify(result.data);
                 localStorage.setItem(`${chatId}many`, jsonData);
@@ -180,14 +177,31 @@ const ChatMain = () => {
             }
         }
     }
-    // let chatInterval;
-    // async function startChatInterval(chatId) {
-    //     clearInterval(chatInterval);
-    //     chatInterval = setInterval(async function () {
-    //         const data = JSON.parse(localStorage.getItem(chatId));
-    //         setSelectedChat(data);
-    //     }, 1000);
-    // }
+    let chatInterval;
+    async function startChatInterval(chatId) {
+        clearInterval(chatInterval);
+        chatInterval = setInterval(function () {
+            if (type === 'one') {
+                const data = JSON.parse(localStorage.getItem(`${chatId}one`));
+                if (data) {
+                    setMemberId(chatId);
+                    setSelectedChat(data);
+                } else {
+                    setSelectedChat([]);
+                }
+            }
+            else if (type === 'many') {
+                const data = JSON.parse(localStorage.getItem(`${chatId}many`));
+                if (data) {
+                    setMemberId(chatId);
+                    setSelectedChat(data);
+                }
+                else {
+                    setSelectedChat([]);
+                }
+            }
+        }, 1000);
+    }
     // console.log(isListOpen)
     return (
         <div className="bg-gray-100">
