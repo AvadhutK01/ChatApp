@@ -6,9 +6,17 @@ const ChatGroupMembersData = sequelize.define('ChatGroupMembersData', {
         primaryKey: true,
         allowNull: false
     },
+    ContactName: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
     type: {
         type: Sequelize.STRING,
         defaultValue: 'many'
+    },
+    isAdmin: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
     }
 });
 module.exports = ChatGroupMembersData;

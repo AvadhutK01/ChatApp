@@ -7,6 +7,8 @@ const GroupNameData = require('../Models/chatGroupsModel');
 const ChatGroupMembersData = require('../Models/chatGroupMembersModel');
 const GroupchatStorageDb = require('../Models/chatGroupDataStorageModel');
 const crypto = require('crypto');
+const { Sequelize } = require('sequelize');
+const sequelize = require('../dbConnect');
 module.exports.getMain = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'ChatMain.html'));
 }
@@ -86,6 +88,7 @@ module.exports.addContact = async (req, res) => {
 module.exports.addGroup = async (req, res) => {
     try {
         const id = req.user.id;
+        const name = req.user.name;
         const group_name = req.body.data.Groupname;
         const group = await GroupNameData.create({
             id: getRandomInt(100000, 999999),
@@ -95,6 +98,8 @@ module.exports.addGroup = async (req, res) => {
         const GroupId = group.id;
         await ChatGroupMembersData.create({
             id: getRandomInt(100000, 999999),
+            ContactName: name,
+            isAdmin: true,
             userDatumId: id,
             GroupNameDatumId: GroupId
         })
@@ -104,16 +109,29 @@ module.exports.addGroup = async (req, res) => {
     }
 }
 
-module.exports.addMemberToGroup = async (req, res) => {
+module.exports.performActionToGroup = async (req, res) => {
     try {
         const GroupId = parseInt(req.body.data.groupId);
         const MemberId = parseInt(req.body.data.memberId);
-        await ChatGroupMembersData.create({
-            id: getRandomInt(100000, 999999),
-            userDatumId: MemberId,
-            GroupNameDatumId: GroupId
-        })
-        return res.status(201).json({ message: "Group Created" });
+        const name = req.body.data.contactName;
+        const action = req.body.data.action;
+        if (action === 'addMember') {
+            await ChatGroupMembersData.create({
+                id: getRandomInt(100000, 999999),
+                ContactName: name,
+                userDatumId: MemberId,
+                GroupNameDatumId: GroupId
+            })
+            return res.status(201).json({ message: "success" });
+        }
+        if (action === 'removeMember') {
+            await ChatGroupMembersData.destroy({ where: { userDatumId: MemberId, GroupNameDatumId: GroupId } });
+            return res.status(201).json({ message: "success" });
+        }
+        if (action === 'setAdmin') {
+            await ChatGroupMembersData.update({ isAdmin: 1 }, { where: { userDatumId: MemberId, GroupNameDatumId: GroupId } })
+            return res.status(201).json({ message: "success" });
+        }
     } catch (error) {
         console.log(error)
     }
@@ -124,7 +142,6 @@ module.exports.addMessage = async (req, res) => {
         const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A');
         const messageText = req.body.data.messageText;
         const memberId = parseInt(req.body.data.memberId);
-        // console.log(memberId)
         const senderId = req.user.id;
         await chatStorageDb.create({
             id: getRandomInt(100000, 999999),
@@ -145,9 +162,6 @@ module.exports.addMessageToGroup = async (req, res) => {
         const messageText = req.body.data.messageText;
         const memberId = parseInt(req.body.data.memberId);
         const senderId = req.user.id;
-        console.log(memberId)
-        console.log(senderId)
-        console.log(messageText)
         await GroupchatStorageDb.create({
             id: getRandomInt(100000, 999999),
             senderId: senderId,
@@ -198,9 +212,37 @@ module.exports.getChat = async (req, res) => {
 
 module.exports.getMembersList = async (req, res) => {
     try {
+        const action = req.body.action;
         const userId = parseInt(req.user.id);
-        const result = await ChatMembersData.findAll({ where: { userDatumId: userId } });
-        res.status(201).json(result);
+        const groupId = parseInt(req.body.memberId);
+        if (action == 'addMember') {
+            const result = await ChatMembersData.findAll({
+                where: {
+                    userDatumId: userId,
+                    memberId: {
+                        [Sequelize.Op.notIn]: sequelize.literal(`(SELECT userDatumId FROM ChatGroupMembersData WHERE GroupNameDatumId = ${groupId})`)
+                    }
+                }
+            });
+            return res.status(201).json(result);
+        }
+        if (action == 'removeMember') {
+            const result = await ChatGroupMembersData.findAll({
+                where: {
+                    GroupNameDatumId: groupId
+                }
+            })
+            return res.status(201).json(result)
+        }
+        if (action == 'setAdmin') {
+            const result = await ChatGroupMembersData.findAll({
+                where: {
+                    GroupNameDatumId: groupId,
+                    isAdmin: 0
+                }
+            })
+            return res.status(201).json(result)
+        }
     } catch (error) {
         console.log(error);
     }
@@ -209,23 +251,34 @@ module.exports.getMembersList = async (req, res) => {
 module.exports.getChatFromGroup = async (req, res) => {
     try {
         const groupId = parseInt(req.body.groupId);
+        const userId = parseInt(req.user.id);
+
         let result = await GroupchatStorageDb.findAll({
             where: {
                 GroupNameDatumId: groupId
             },
-            order: [['date', 'DESC']],
+            order: [['date', 'DESC']], // Sort messages in descending order
             limit: 10
         });
-        result.sort((a, b) => {
-            const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
-            const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');
-            return dateA - dateB;
+
+        let isAdmin = await ChatGroupMembersData.findOne({
+            where: {
+                userDatumId: userId,
+                GroupNameDatumId: groupId,
+                isAdmin: 1
+            },
+            attributes: ['isAdmin']
         });
-        res.status(200).send(result);
+
+        result.sort((a, b) => b.date - a.date); // Sort messages in descending order
+
+        res.status(200).send({ isAdmin: isAdmin ? isAdmin.isAdmin : false, result: result });
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        res.status(500).send('Internal Server Error');
     }
-}
+};
+
 module.exports.getLatestChat = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);

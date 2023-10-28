@@ -14,8 +14,10 @@ const ChatMain = () => {
     const [displayName, setDisplayName] = useState('');
     const [memberId, setMemberId] = useState('');
     const [type, setType] = useState('');
+    const [isAdmin, setAdmin] = useState(false);
     const [isListOpen, setIsLIstOpen] = useState(false);
     const [MemberList, setMembersList] = useState([]);
+    const [action, setAction] = useState('');
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -99,9 +101,10 @@ const ChatMain = () => {
         await fetchChat(memberId);
     };
 
-    const AddMemberToGroup = async (ListMemberId) => {
-        const data = { memberId: ListMemberId, groupId: memberId };
-        await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-group-member`, { data }, {
+    const PerformActionToGroup = async (ListMemberId, action, contactName) => {
+        // console.log(ListMemberId)
+        const data = { memberId: ListMemberId, groupId: memberId, contactName: contactName, action: action };
+        await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/actionOnGroup`, { data }, {
             headers: {
                 'Authorization': localStorage.getItem('token')
             }
@@ -127,9 +130,10 @@ const ChatMain = () => {
     const handleListClose = () => {
         setIsLIstOpen(false);
     }
-    async function fetchMembers() {
+    async function fetchMembers(action) {
+        // console.log(action)
         const token = localStorage.getItem('token');
-        const result = await axios.get(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/getMembersList`, {
+        const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/getMembersList`, { action, memberId }, {
             headers: {
                 "Authorization": token
             }
@@ -165,16 +169,18 @@ const ChatMain = () => {
                     'Authorization': localStorage.getItem('token')
                 }
             });
-            if (result) {
-                const jsonData = JSON.stringify(result.data);
-                localStorage.setItem(`${chatId}many`, jsonData);
-                const data = JSON.parse(localStorage.getItem(`${chatId}many`));
-                setMemberId(chatId);
-                setSelectedChat(data);
+
+            if (result.data.isAdmin) {
+                setAdmin(true);
             }
-            else {
+
+            if (result.data.result) {
+                setMemberId(chatId);
+                setSelectedChat(result.data.result);
+            } else {
                 setSelectedChat([]);
             }
+
         }
     }
     let chatInterval;
@@ -202,7 +208,7 @@ const ChatMain = () => {
             }
         }, 1000);
     }
-    // console.log(isListOpen)
+    // console.log(action)
     return (
         <div className="bg-gray-100">
             <header className="bg-purple-500 text-white text-center py-2 fixed top-0 w-full">
@@ -216,12 +222,13 @@ const ChatMain = () => {
                             displayName={displayName}
                             chatContent={selectedChat}
                             memberId={memberId}
-                            // onMenuClick={() => setIsModalOpen(true)}
                             type={type}
+                            isAdmin={isAdmin}
                             onMessageSubmit={handleMessageSubmit}
                             onMenuClick={
-                                () => {
-                                    fetchMembers()
+                                (action) => {
+                                    setAction(action)
+                                    fetchMembers(action)
                                     setIsLIstOpen(true)
                                 }
                             }
@@ -243,7 +250,8 @@ const ChatMain = () => {
                         showModal={isListOpen}
                         closeModal={handleListClose}
                         members={MemberList}
-                        onAddMember={AddMemberToGroup}
+                        action={action}
+                        onAddMember={PerformActionToGroup}
                     />
                 </div>
             </div>

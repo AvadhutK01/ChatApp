@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MemberListModal = ({ showModal, closeModal, members, onAddMember }) => {
+const MemberListModal = ({ showModal, closeModal, action, members, onAddMember }) => {
     return (
         showModal && (
             <div className="modal fade show" style={{ display: 'block' }}>
@@ -13,15 +13,43 @@ const MemberListModal = ({ showModal, closeModal, members, onAddMember }) => {
                             </button>
                         </div>
                         <div className="modal-body">
-                            <ul className="list-group">
-                                {members.map((member, index) => (
-                                    <li className="list-group-item d-flex justify-content-between" key={index}>
-                                        {member.ContactName}
-                                        <button className="btn btn-primary" onClick={() => onAddMember(member.memberId)}>
-                                            Add
-                                        </button>
-                                    </li>
-                                ))}
+                            <ul className="list-group">{
+                                action === 'addMember' && (
+                                    <>
+                                        {members.map((member, index) => (
+                                            <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                {member.ContactName}
+                                                <button className="btn btn-primary" onClick={() => onAddMember(member.memberId, action, member.ContactName)}>
+                                                    Add
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </>
+                                )}{
+                                    action === 'setAdmin' && (
+                                        <>
+                                            {members.map((member, index) => (
+                                                <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                    {member.ContactName}
+                                                    <button className="btn btn-primary" onClick={() => onAddMember(member.userDatumId, action)}>
+                                                        Set Admin
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </>
+                                    )}{
+                                    action === 'removeMember' && (
+                                        <>
+                                            {members.map((member, index) => (
+                                                <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                    {member.ContactName}
+                                                    <button className="btn btn-primary" onClick={() => onAddMember(member.userDatumId, action)}>
+                                                        Remove
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </>
+                                    )}
                             </ul>
                         </div>
                         <div className="modal-footer">

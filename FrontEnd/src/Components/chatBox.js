@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuClick, type }) => {
+const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuClick, type, isAdmin }) => {
     const [messageText, setMessageText] = useState('');
     const [menuVisible, setMenuVisible] = useState(false);
     const formattedDate = (date) => {
@@ -13,7 +13,7 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuCl
         setMessageText('');
     };
     const handleMenuItemClick = (action) => {
-        onMenuClick()
+        onMenuClick(action)
         setMenuVisible(false);
     };
     const handleMenuClick = () => {
@@ -32,16 +32,19 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuCl
                         <path
                             d="M11 8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1zm0-5a1 1 0 0 1-1 1H6a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1zm0 10a1 1 0 0 1-1 1H6a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1z" />
                     </svg>
-                    {menuVisible && (
-                        type == 'many' && (
-                            <div className="menu">
-                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('addMember')}>Add Member</button>
-                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('removeMember')}>Remove Member</button>
-                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('leaveGroup')}>Leave Group</button>
-                            </div>
-                        )
-
+                    {menuVisible && type === 'many' && (
+                        <div className="menu">
+                            {isAdmin && (
+                                <>
+                                    <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('addMember')}>Add Member</button>
+                                    <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('setAdmin')}>Set Admin</button>
+                                    <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('removeMember')}>Remove Member</button>
+                                </>
+                            )}
+                            <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('leaveGroup')}>Leave Group</button>
+                        </div>
                     )}
+
                     {
                         menuVisible && (type == 'one' && (
                             <div className="menu">
