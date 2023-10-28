@@ -1,22 +1,24 @@
 const { Sequelize } = require("sequelize");
 const sequelize = require("../dbConnect");
-const ChatMembersData = sequelize.define('ChatMembersData', {
+
+const GroupchatStorageDb = sequelize.define('GroupchatStorageDb', {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         allowNull: false
     },
-    memberId: {
+    senderId: {
         type: Sequelize.INTEGER,
         allowNull: false
     },
-    ContactName: {
-        type: Sequelize.STRING,
+    messageText: {
+        type: Sequelize.TEXT,
         allowNull: false
     },
-    type: {
+    date: {
         type: Sequelize.STRING,
-        defaultValue: 'one'
+        allowNull: false
     }
 });
-module.exports = ChatMembersData;
+
+module.exports = GroupchatStorageDb;

@@ -5,7 +5,7 @@ const chatStorageDb = sequelize.define('chatStorage', {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        allowNull: false
     },
     recipeintId: {
         type: Sequelize.INTEGER,
