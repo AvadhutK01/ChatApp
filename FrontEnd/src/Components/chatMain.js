@@ -52,9 +52,13 @@ const ChatMain = () => {
                     userDatumId: data.userDatumId,
                     recipeintId: data.recipeintId
                 };
-                if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
-                    setSelectedChat(prevChat => [...prevChat, receivedMessage]);
+                if (!isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
+                    if ((memberId == data.recipeintId && userId == data.userDatumId) || (memberId == data.userDatumId && userId == data.recipeintId)) {
+                        setSelectedChat(prevChat => [...prevChat, receivedMessage]);
+                    }
                     setlatestMessageFromMember({
+                        userDatumId: data.userDatumId,
+                        recipeintId: data.recipeintId,
                         chatId: chatIdofMember,
                         message: data.messageText,
                         time: data.date
@@ -69,13 +73,16 @@ const ChatMain = () => {
                     GroupNameDatumId: data.GroupNameDatumId
                 };
                 if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
-                    setSelectedChat(prevChat => [...prevChat, receivedMessage]);
-                    setlatestMessageFromMember({
-                        chatId: chatIdofMember,
-                        message: data.messageText,
-                        time: data.date
-                    })
+                    if (memberId == data.GroupNameDatumId || userId == data.senderId)
+                        setSelectedChat(prevChat => [...prevChat, receivedMessage]);
                 }
+                setlatestMessageFromMember({
+                    senderId: data.senderId,
+                    GroupNameDatumId: data.GroupNameDatumId,
+                    chatId: chatIdofMember,
+                    message: data.messageText,
+                    time: data.date
+                })
             }
         });
         return () => {
@@ -97,7 +104,6 @@ const ChatMain = () => {
             console.log(err);
         }
     };
-    // console.log(chatIdofMember)
     const handleAddGroup = async () => {
         try {
             const data = { Groupname: groupName };
@@ -200,7 +206,6 @@ const ChatMain = () => {
             if (result) {
                 setMemberId(chatId);
                 setSelectedChat(result.data);
-                // console.log(result.data)
             }
             else {
                 setSelectedChat([]);
@@ -222,7 +227,6 @@ const ChatMain = () => {
             if (result.data.result) {
                 setMemberId(chatId);
                 setSelectedChat(result.data.result);
-                // console.log(result.data.result)
             } else {
                 setSelectedChat([]);
             }

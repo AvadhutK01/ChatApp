@@ -48,6 +48,7 @@ sequelize.sync({ force: false, logging: false }).then(() => {
 io.on('connection', socket => {
     console.log('connected at' + socket.id)
     socket.on('send-message', (data) => {
-        io.emit('receive-message', data)
+        io.emit('receive-message', data);
+        //io.to(data.recipeintId).emit('receive-message', data);
     })
 })

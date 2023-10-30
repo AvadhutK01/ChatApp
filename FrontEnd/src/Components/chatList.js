@@ -6,12 +6,30 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
     useEffect(() => {
         if (latestMessageFromMember) {
             const updatedMessages = latestMessages.map(messageInfo => {
-                if (messageInfo.chatId === latestMessageFromMember.chatId) {
-                    return {
-                        chatId: latestMessageFromMember.chatId,
-                        message: latestMessageFromMember.message,
-                        time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
-                    };
+                if (latestMessageFromMember.senderId) {
+                    if (messageInfo.userId === latestMessageFromMember.GroupNameDatumId) {
+                        return {
+                            userId: latestMessageFromMember.GroupNameDatumId,
+                            senderId: latestMessageFromMember.senderId,
+                            chatId: messageInfo.chatId,
+                            message: latestMessageFromMember.message,
+                            time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                        };
+                    }
+                    return messageInfo;
+                }
+
+                if (latestMessageFromMember.recipeintId) {
+                    if (messageInfo.recipeintId == latestMessageFromMember.recipeintId) {
+                        console.log("message" + messageInfo.chatId)
+                        return {
+                            userId: latestMessageFromMember.userDatumId,
+                            recipeintId: latestMessageFromMember.recipeintId,
+                            chatId: messageInfo.chatId,
+                            message: latestMessageFromMember.message,
+                            time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                        };
+                    }
                 }
                 return messageInfo;
             });
@@ -28,11 +46,23 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                     try {
                         const latestMessage = await getLatestMessage(chat.memberId);
                         if (latestMessage) {
-                            latestMessagesArray.push({
-                                chatId: chat.id,
-                                message: latestMessage.messageText,
-                                time: moment(latestMessage.date, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
-                            });
+                            if (latestMessage.recipeintId) {
+                                latestMessagesArray.push({
+                                    chatId: chat.id,
+                                    userId: latestMessage.userDatumId,
+                                    recipeintId: latestMessage.recipeintId,
+                                    message: latestMessage.messageText,
+                                    time: moment(latestMessage.date, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                                });
+                            } else if (latestMessage.senderId) {
+                                latestMessagesArray.push({
+                                    chatId: chat.id,
+                                    userId: latestMessage.GroupNameDatumId,
+                                    senderId: latestMessage.senderId,
+                                    message: latestMessage.messageText,
+                                    time: moment(latestMessage.date, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                                });
+                            }
                         } else {
                             latestMessagesArray.push({
                                 chatId: chat.id,
@@ -93,6 +123,8 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                 </div>
                 <ul className="list-unstyled chat-list overflow-y-auto h-96" id="chat-list">
                     {chats.map(chat => {
+                        console.log("latinfo" + JSON.stringify(latestMessages));
+                        console.log("chat" + chat.id)
                         const latestMessageInfo = latestMessages.find(item => item.chatId === chat.id);
                         const messageTime = latestMessageInfo ? moment(latestMessageInfo.time, 'MMMM Do YYYY, h:mm:ss a') : null;
                         const isToday = messageTime && messageTime.isSame(moment(), 'day');
