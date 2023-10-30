@@ -1,9 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import moment from 'moment';
-
-const ChatList = ({ chats, onChatClick, onMenuClick }) => {
+const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) => {
     const [latestMessages, setLatestMessages] = useState([]);
+    useEffect(() => {
+        if (latestMessageFromMember) {
+            const updatedMessages = latestMessages.map(messageInfo => {
+                if (messageInfo.chatId === latestMessageFromMember.chatId) {
+                    return {
+                        chatId: latestMessageFromMember.chatId,
+                        message: latestMessageFromMember.message,
+                        time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                    };
+                }
+                return messageInfo;
+            });
+            setLatestMessages([...updatedMessages]);
+        }
+    }, [latestMessageFromMember]);
 
     useEffect(() => {
         const fetchLatestMessages = async () => {
@@ -34,16 +48,10 @@ const ChatList = ({ chats, onChatClick, onMenuClick }) => {
             } catch (error) {
                 console.log(error)
             }
-            finally {
-                // setTimeout(fetchLatestMessages, 1000);
-            }
         };
 
         fetchLatestMessages();
     }, [chats]);
-    // setInterval(()=>{
-    //     fetchLatestMessages()
-    // })
     const getLatestMessage = async (memberId) => {
         try {
             const chatMessages = await getChatMessagesForMemberId(memberId);
@@ -91,7 +99,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick }) => {
                         const formattedTime = latestMessageInfo && messageTime.isValid() ? (isToday ? messageTime.format('h:mm a') : messageTime.format('MMMM Do YYYY')) : 'N/A';
                         return (
                             <li key={chat.id} className="p-2 border-b border-gray-200 flex justify-between items-center">
-                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type)}>
+                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id)}>
                                     <div className="flex items-center">
                                         <div className="pr-4">
                                             <p className="font-semibold mb-0">{chat.name}</p>

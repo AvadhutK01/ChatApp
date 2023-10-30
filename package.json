@@ -17,7 +17,7 @@
     "util": "^0.12.5"
   },
   "scripts": {
-    "server": "cd backend && pm2 start app.js",
+    "server": "cd backend && nodemon app.js",
     "client": "cd frontend && npm start",
     "dev": "concurrently \"npm run client\" \"npm run server\""
   }

@@ -9,9 +9,6 @@ const GroupchatStorageDb = require('../Models/chatGroupDataStorageModel');
 const crypto = require('crypto');
 const { Sequelize } = require('sequelize');
 const sequelize = require('../dbConnect');
-module.exports.getMain = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'ChatMain.html'));
-}
 
 module.exports.getChatList = async (req, res) => {
     const id = req.user.id;
@@ -139,7 +136,7 @@ module.exports.performActionToGroup = async (req, res) => {
 
 module.exports.addMessage = async (req, res) => {
     try {
-        const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A');
+        const currentDateTime = req.body.data.currentDateTime;
         const messageText = req.body.data.messageText;
         const memberId = parseInt(req.body.data.memberId);
         const senderId = req.user.id;
@@ -155,7 +152,6 @@ module.exports.addMessage = async (req, res) => {
         console.log(error)
     }
 }
-
 module.exports.addMessageToGroup = async (req, res) => {
     try {
         const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A');
@@ -169,6 +165,7 @@ module.exports.addMessageToGroup = async (req, res) => {
             date: currentDateTime,
             GroupNameDatumId: memberId
         })
+
         return res.status(201).json('success');
     } catch (error) {
         console.log(error)
@@ -184,8 +181,10 @@ module.exports.getChat = async (req, res) => {
                 recipeintId: memberId,
                 userDatumId: userId
             },
+            attributes: ['messageText', 'date', 'userDatumId', 'recipeintId']
+            ,
             order: [['date', 'DESC']],
-            limit: 5
+            // limit: 5
         });
 
         let chatListSecondCondition = await chatStorageDb.findAll({
@@ -193,8 +192,10 @@ module.exports.getChat = async (req, res) => {
                 recipeintId: userId,
                 userDatumId: memberId
             },
+            attributes: ['messageText', 'date', 'userDatumId', 'recipeintId']
+            ,
             order: [['date', 'DESC']],
-            limit: 5
+            // limit: 5
         });
 
         let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition);
@@ -257,8 +258,9 @@ module.exports.getChatFromGroup = async (req, res) => {
             where: {
                 GroupNameDatumId: groupId
             },
-            order: [['date', 'DESC']], // Sort messages in descending order
-            limit: 10
+            order: [['date', 'DESC']],
+            attributes: ['messageText', 'date', 'senderId', 'GroupNameDatumId'],
+            // limit: 10
         });
 
         let isAdmin = await ChatGroupMembersData.findOne({
@@ -270,8 +272,11 @@ module.exports.getChatFromGroup = async (req, res) => {
             attributes: ['isAdmin']
         });
 
-        result.sort((a, b) => b.date - a.date); // Sort messages in descending order
-
+        result.sort((a, b) => {
+            const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
+            const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');
+            return dateA - dateB;
+        });
         res.status(200).send({ isAdmin: isAdmin ? isAdmin.isAdmin : false, result: result });
     } catch (error) {
         console.log(error);
@@ -324,4 +329,3 @@ function getRandomInt(min, max) {
     const randomNumber = buffer.readUInt32LE(0);
     return Math.floor(randomNumber / 0xFFFFFFFF * (max - min + 1) + min);
 }
-// const Group = await GroupNameData.findOne({ where: { GroupName: group_name }, attributes: ['id'] });

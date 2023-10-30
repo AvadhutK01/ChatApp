@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ChatList from './chatList';
 import ChatBox from './chatBox';
+import isEqual from 'lodash/isEqual';
 import ChatModal from './chatModal';
 import axios from 'axios';
 import MemberLisstModal from './memberLisstModal';
+import io from 'socket.io-client';
+import moment from 'moment';
+import { jwtDecode } from 'jwt-decode';
+const socket = io(process.env.REACT_APP_BACKEND_HOST_NAME);
 const ChatMain = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [groupName, setGroupName] = useState('');
@@ -14,10 +19,13 @@ const ChatMain = () => {
     const [displayName, setDisplayName] = useState('');
     const [memberId, setMemberId] = useState('');
     const [type, setType] = useState('');
+    const [latestMessageFromMember, setlatestMessageFromMember] = useState([]);
+    const [chatIdofMember, setchatIdofMember] = useState('');
     const [isAdmin, setAdmin] = useState(false);
     const [isListOpen, setIsLIstOpen] = useState(false);
     const [MemberList, setMembersList] = useState([]);
     const [action, setAction] = useState('');
+    const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -35,24 +43,61 @@ const ChatMain = () => {
 
         fetchData();
     }, []);
-
+    useEffect(() => {
+        socket.on('receive-message', (data) => {
+            if (data.type === 'one') {
+                const receivedMessage = {
+                    messageText: data.messageText,
+                    date: data.date,
+                    userDatumId: data.userDatumId,
+                    recipeintId: data.recipeintId
+                };
+                if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
+                    setSelectedChat(prevChat => [...prevChat, receivedMessage]);
+                    setlatestMessageFromMember({
+                        chatId: chatIdofMember,
+                        message: data.messageText,
+                        time: data.date
+                    })
+                }
+            }
+            else if (data.type === 'many') {
+                const receivedMessage = {
+                    messageText: data.messageText,
+                    date: data.date,
+                    senderId: data.senderId,
+                    GroupNameDatumId: data.GroupNameDatumId
+                };
+                if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
+                    setSelectedChat(prevChat => [...prevChat, receivedMessage]);
+                    setlatestMessageFromMember({
+                        chatId: chatIdofMember,
+                        message: data.messageText,
+                        time: data.date
+                    })
+                }
+            }
+        });
+        return () => {
+            socket.off('receive-message');
+        };
+    }, [type, memberId, selectedChat, chatIdofMember]);
     useEffect(() => {
         if (memberId && type) {
             fetchChat(memberId);
         }
     }, [type, memberId]);
-
-    const handleChatClick = async (chatId, displayName, type) => {
+    const handleChatClick = async (chatId, displayName, type, id) => {
         try {
             setType(type);
             await fetchChat(chatId);
-            // startChatInterval(chatId)
             setDisplayName(displayName);
+            setchatIdofMember(id);
         } catch (err) {
             console.log(err);
         }
     };
-
+    // console.log(chatIdofMember)
     const handleAddGroup = async () => {
         try {
             const data = { Groupname: groupName };
@@ -83,13 +128,16 @@ const ChatMain = () => {
 
     };
     const handleMessageSubmit = async (messageText) => {
-        const data = { memberId: memberId, messageText: messageText };
+        const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A')
+        const data = { memberId: memberId, messageText: messageText, currentDateTime: currentDateTime };
         if (type === 'one') {
             await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-message`, { data }, {
                 headers: {
                     'Authorization': localStorage.getItem('token')
                 }
             });
+            const messageData = { recipeintId: memberId, date: currentDateTime, messageText: messageText, userDatumId: userId, type: type }
+            socket.emit('send-message', messageData);
         }
         else if (type === 'many') {
             await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-messagetoGroup`, { data }, {
@@ -97,12 +145,12 @@ const ChatMain = () => {
                     'Authorization': localStorage.getItem('token')
                 }
             });
+            const messageData = { GroupNameDatumId: memberId, date: currentDateTime, messageText: messageText, senderId: userId, type: type }
+            socket.emit('send-message', messageData);
         }
-        await fetchChat(memberId);
     };
 
     const PerformActionToGroup = async (ListMemberId, action, contactName) => {
-        // console.log(ListMemberId)
         const data = { memberId: ListMemberId, groupId: memberId, contactName: contactName, action: action };
         await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/actionOnGroup`, { data }, {
             headers: {
@@ -131,7 +179,6 @@ const ChatMain = () => {
         setIsLIstOpen(false);
     }
     async function fetchMembers(action) {
-        // console.log(action)
         const token = localStorage.getItem('token');
         const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/getMembersList`, { action, memberId }, {
             headers: {
@@ -151,11 +198,9 @@ const ChatMain = () => {
                 }
             });
             if (result) {
-                const jsonData = JSON.stringify(result.data);
-                localStorage.setItem(`${chatId}one`, jsonData);
-                const data = JSON.parse(localStorage.getItem(`${chatId}one`));
                 setMemberId(chatId);
-                setSelectedChat(data);
+                setSelectedChat(result.data);
+                // console.log(result.data)
             }
             else {
                 setSelectedChat([]);
@@ -177,38 +222,13 @@ const ChatMain = () => {
             if (result.data.result) {
                 setMemberId(chatId);
                 setSelectedChat(result.data.result);
+                // console.log(result.data.result)
             } else {
                 setSelectedChat([]);
             }
 
         }
     }
-    let chatInterval;
-    async function startChatInterval(chatId) {
-        clearInterval(chatInterval);
-        chatInterval = setInterval(function () {
-            if (type === 'one') {
-                const data = JSON.parse(localStorage.getItem(`${chatId}one`));
-                if (data) {
-                    setMemberId(chatId);
-                    setSelectedChat(data);
-                } else {
-                    setSelectedChat([]);
-                }
-            }
-            else if (type === 'many') {
-                const data = JSON.parse(localStorage.getItem(`${chatId}many`));
-                if (data) {
-                    setMemberId(chatId);
-                    setSelectedChat(data);
-                }
-                else {
-                    setSelectedChat([]);
-                }
-            }
-        }, 1000);
-    }
-    // console.log(action)
     return (
         <div className="bg-gray-100">
             <header className="bg-purple-500 text-white text-center py-2 fixed top-0 w-full">
@@ -216,7 +236,12 @@ const ChatMain = () => {
             </header>
             <div className="pt-16 w-full">
                 <div className="container mx-auto flex flex-col lg:flex-row">
-                    <ChatList chats={chats} onChatClick={handleChatClick} onMenuClick={() => setIsModalOpen(true)} />
+                    <ChatList
+                        chats={chats}
+                        onChatClick={handleChatClick}
+                        onMenuClick={() => setIsModalOpen(true)}
+                        latestMessageFromMember={latestMessageFromMember}
+                    />
                     {selectedChat && (
                         <ChatBox
                             displayName={displayName}
