@@ -85,7 +85,54 @@ const ChatMain = () => {
                 })
             }
         });
+        socket.on('receive-file', (data) => {
+            if (data.type === 'one') {
+                const receivedMessage = {
+                    fileUrl: data.fileUrl,
+                    fileName: data.fileName,
+                    date: data.date,
+                    userDatumId: data.userDatumId,
+                    recipeintId: data.recipeintId
+                };
+                if (!isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
+                    if ((memberId == data.recipeintId && userId == data.userDatumId) || (memberId == data.userDatumId && userId == data.recipeintId)) {
+                        setSelectedChat(prevChat => [...prevChat, receivedMessage]);
+                    }
+                    setlatestMessageFromMember({
+                        userDatumId: data.userDatumId,
+                        recipeintId: data.recipeintId,
+                        chatId: chatIdofMember,
+                        fileUrl: data.fileUrl,
+                        fileName: data.fileName,
+                        time: data.date
+                    })
+                }
+            }
+            else if (data.type === 'many') {
+                console.log(data);
+                const receivedMessage = {
+                    fileUrl: data.fileUrl,
+                    fileName: data.fileName,
+                    date: data.date,
+                    senderId: data.senderId,
+                    GroupNameDatumId: data.GroupNameDatumId
+                };
+                if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
+                    if (memberId == data.GroupNameDatumId || userId == data.senderId)
+                        setSelectedChat(prevChat => [...prevChat, receivedMessage]);
+                }
+                setlatestMessageFromMember({
+                    senderId: data.senderId,
+                    GroupNameDatumId: data.GroupNameDatumId,
+                    chatId: chatIdofMember,
+                    fileUrl: data.fileUrl,
+                    fileName: data.fileName,
+                    time: data.date
+                })
+            }
+        });
         return () => {
+            socket.off('receive-file');
             socket.off('receive-message');
         };
     }, [type, memberId, selectedChat, chatIdofMember]);
@@ -155,6 +202,36 @@ const ChatMain = () => {
             socket.emit('send-message', messageData);
         }
     };
+
+    const handleFileSubmit = async (file) => {
+        const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A');
+        const fileName = file.name;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('memberId', memberId);
+        formData.append('filename', fileName);
+        formData.append('currentDateTime', currentDateTime);
+        if (type === 'one') {
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-file`, formData, {
+                headers: {
+                    'Authorization': localStorage.getItem('token'),
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            const fileData = { recipeintId: memberId, date: currentDateTime, fileName: fileName, fileUrl: response.data.fileUrl, userDatumId: userId, type: type }
+            socket.emit('send-file', fileData);
+        }
+        else if (type === 'many') {
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-fileToGroup`, formData, {
+                headers: {
+                    'Authorization': localStorage.getItem('token'),
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            const fileData = { GroupNameDatumId: memberId, date: currentDateTime, fileName: fileName, fileUrl: response.data.fileUrl, senderId: userId, type: type }
+            socket.emit('send-file', fileData);
+        }
+    }
 
     const PerformActionToGroup = async (ListMemberId, action, contactName) => {
         const data = { memberId: ListMemberId, groupId: memberId, contactName: contactName, action: action };
@@ -254,6 +331,7 @@ const ChatMain = () => {
                             type={type}
                             isAdmin={isAdmin}
                             onMessageSubmit={handleMessageSubmit}
+                            onFileSubmit={handleFileSubmit}
                             onMenuClick={
                                 (action) => {
                                     setAction(action)

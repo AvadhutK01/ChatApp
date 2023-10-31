@@ -9,7 +9,9 @@ const GroupchatStorageDb = require('../Models/chatGroupDataStorageModel');
 const crypto = require('crypto');
 const { Sequelize } = require('sequelize');
 const sequelize = require('../dbConnect');
-
+const ChatGroupFileModal = require('../Models/chatGroupFileModal');
+const ChatMemberFileModal = require('../Models/chatMemberFileModal');
+const AWS = require('aws-sdk');
 module.exports.getChatList = async (req, res) => {
     const id = req.user.id;
     try {
@@ -152,6 +154,40 @@ module.exports.addMessage = async (req, res) => {
         console.log(error)
     }
 }
+
+module.exports.addfile = async (req, res) => {
+    try {
+        // console.log(req.body);
+        const currentDateTime = req.body.currentDateTime;
+        const filename = req.body.filename;
+        const memberId = parseInt(req.body.memberId);
+        const senderId = req.user.id;
+        const file = req.file;
+        const s3 = new AWS.S3({
+            accessKeyId: process.env.IAM_USER_KEY,
+            secretAccessKey: process.env.IAM_USER_SECRET
+        });
+        const params = {
+            Bucket: 'chatfilebucket',
+            Key: filename,
+            Body: file.buffer,
+            ACL: 'public-read',
+        };
+        const s3Response = await s3.upload(params).promise();
+        await ChatMemberFileModal.create({
+            id: getRandomInt(100000, 999999),
+            recipeintId: memberId,
+            fileName: filename,
+            fileUrl: s3Response.Location,
+            date: currentDateTime,
+            userDatumId: senderId
+        })
+        return res.status(201).json({ fileUrl: s3Response.Location });
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 module.exports.addMessageToGroup = async (req, res) => {
     try {
         const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A');
@@ -171,6 +207,41 @@ module.exports.addMessageToGroup = async (req, res) => {
         console.log(error)
     }
 }
+
+module.exports.addfileToGroup = async (req, res) => {
+    try {
+        const currentDateTime = req.body.currentDateTime;
+        const filename = req.body.filename;
+        // console.log("object" + filename);
+        const memberId = parseInt(req.body.memberId);
+        const senderId = req.user.id;
+        const file = req.file;
+        const s3 = new AWS.S3({
+            accessKeyId: process.env.IAM_USER_KEY,
+            secretAccessKey: process.env.IAM_USER_SECRET
+        });
+        const params = {
+            Bucket: 'chatfilebucket',
+            Key: filename,
+            Body: file.buffer,
+            ACL: 'public-read',
+        };
+        // console.log(filename);
+        const s3Response = await s3.upload(params).promise();
+        await ChatGroupFileModal.create({
+            id: getRandomInt(100000, 999999),
+            senderId: senderId,
+            fileName: filename,
+            date: currentDateTime,
+            fileUrl: s3Response.Location,
+            GroupNameDatumId: memberId
+        })
+        return res.status(201).json({ fileUrl: s3Response.Location });
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 
 module.exports.getChat = async (req, res) => {
     try {
@@ -198,7 +269,27 @@ module.exports.getChat = async (req, res) => {
             // limit: 5
         });
 
-        let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition);
+        let chatListThirdCondition = await ChatMemberFileModal.findAll({
+            where: {
+                recipeintId: memberId,
+                userDatumId: userId
+            },
+            attributes: ['fileName', 'fileUrl', 'date', 'userDatumId', 'recipeintId']
+            ,
+            order: [['date', 'DESC']],
+        })
+
+        let chatListFourthCondition = await ChatMemberFileModal.findAll({
+            where: {
+                recipeintId: userId,
+                userDatumId: memberId
+            },
+            attributes: ['fileName', 'fileUrl', 'date', 'userDatumId', 'recipeintId']
+            ,
+            order: [['date', 'DESC']],
+        })
+
+        let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition).concat(chatListThirdCondition).concat(chatListFourthCondition);
         combinedChatList.sort((a, b) => {
             const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
             const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');
@@ -254,12 +345,21 @@ module.exports.getChatFromGroup = async (req, res) => {
         const groupId = parseInt(req.body.groupId);
         const userId = parseInt(req.user.id);
 
-        let result = await GroupchatStorageDb.findAll({
+        let result1 = await GroupchatStorageDb.findAll({
             where: {
                 GroupNameDatumId: groupId
             },
             order: [['date', 'DESC']],
             attributes: ['messageText', 'date', 'senderId', 'GroupNameDatumId'],
+            // limit: 10
+        });
+
+        let result2 = await ChatGroupFileModal.findAll({
+            where: {
+                GroupNameDatumId: groupId
+            },
+            order: [['date', 'DESC']],
+            attributes: ['fileName', 'fileUrl', 'date', 'senderId', 'GroupNameDatumId'],
             // limit: 10
         });
 
@@ -271,7 +371,7 @@ module.exports.getChatFromGroup = async (req, res) => {
             },
             attributes: ['isAdmin']
         });
-
+        const result = result1.concat(result2)
         result.sort((a, b) => {
             const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
             const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');
@@ -305,14 +405,38 @@ module.exports.getLatestChat = async (req, res) => {
             order: [['date', 'DESC']],
             limit: 5
         });
-        let chatListThirdCondition = await GroupchatStorageDb.findAll({
+        let chatListThirdCondition = await ChatMemberFileModal.findAll({
+            where: {
+                recipeintId: memberId,
+                userDatumId: userId
+            },
+            order: [['date', 'DESC']],
+            limit: 5
+        })
+
+        let chatListFourthCondition = await ChatMemberFileModal.findAll({
+            where: {
+                recipeintId: userId,
+                userDatumId: memberId
+            },
+            order: [['date', 'DESC']],
+            limit: 5
+        })
+        let chatListFifthCondition = await GroupchatStorageDb.findAll({
             where: {
                 GroupNameDatumId: memberId
             },
             order: [['date', 'DESC']],
             limit: 5
         });
-        let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition).concat(chatListThirdCondition);
+        let chatListSixthCondition = await ChatGroupFileModal.findAll({
+            where: {
+                GroupNameDatumId: memberId
+            },
+            order: [['date', 'DESC']],
+            limit: 5
+        });
+        let combinedChatList = chatListFirstCondition.concat(chatListSecondCondition).concat(chatListThirdCondition).concat(chatListFourthCondition).concat(chatListFifthCondition).concat(chatListSixthCondition);
         combinedChatList.sort((a, b) => {
             const dateA = moment(a.date, 'DD/MM/YYYY, hh:mm:ss A');
             const dateB = moment(b.date, 'DD/MM/YYYY, hh:mm:ss A');

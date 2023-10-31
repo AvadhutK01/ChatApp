@@ -20,6 +20,8 @@ const chatStorageDb = require('./Models/chatStorageModel');
 const ChatGroupMembersData = require('./Models/chatGroupMembersModel');
 const GroupchatStorageDb = require('./Models/chatGroupDataStorageModel');
 const GroupNameData = require('./Models/chatGroupsModel');
+const ChatGroupFileModal = require('./Models/chatGroupFileModal');
+const ChatMemberFileModal = require('./Models/chatMemberFileModal');
 app.use(cors({
     origin: '*'
 }));
@@ -29,6 +31,8 @@ user.hasMany(ChatMembersData);
 ChatMembersData.belongsTo(user);
 user.hasMany(chatStorageDb);
 chatStorageDb.belongsTo(user);
+user.hasMany(ChatMemberFileModal);
+ChatMemberFileModal.belongsTo(user);
 user.hasMany(ChatGroupMembersData);
 ChatGroupMembersData.belongsTo(user);
 GroupNameData.hasMany(ChatGroupMembersData);
@@ -37,6 +41,8 @@ user.hasMany(GroupNameData);
 GroupNameData.belongsTo(user);
 GroupNameData.hasMany(GroupchatStorageDb);
 GroupchatStorageDb.belongsTo(GroupNameData);
+GroupNameData.hasMany(ChatGroupFileModal);
+ChatGroupFileModal.belongsTo(GroupNameData);
 app.use("/user", userRouter);
 app.use('/chat', chatRouter);
 app.use(express.static(path.join(__dirname, '..', 'FrontEnd', 'Public')));
@@ -50,5 +56,8 @@ io.on('connection', socket => {
     socket.on('send-message', (data) => {
         io.emit('receive-message', data);
         //io.to(data.recipeintId).emit('receive-message', data);
+    })
+    socket.on('send-file', (data) => {
+        io.emit('receive-file', data)
     })
 })

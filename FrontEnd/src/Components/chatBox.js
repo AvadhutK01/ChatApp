@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuClick, type, isAdmin }) => {
+const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin }) => {
     const [messageText, setMessageText] = useState('');
     const [menuVisible, setMenuVisible] = useState(false);
     const formattedDate = (date) => {
@@ -12,6 +12,20 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuCl
         onMessageSubmit(messageText);
         setMessageText('');
     };
+
+    const handlePaperClipClick = (e) => {
+        e.preventDefault();
+        document.getElementById('fileInput').click();
+    }
+
+    const handleFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            onFileSubmit(selectedFile)
+        }
+        document.getElementById('fileInput').value = '';
+    }
+
     const handleMenuItemClick = (action) => {
         onMenuClick(action)
         setMenuVisible(false);
@@ -64,10 +78,33 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuCl
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />
                             )}
-                            <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
+                            {/* fileUrl: data.fileUrl, */}
+                            {/* filename:data.filename, */}
+                            {message.fileUrl && message.fileName && (
+                                <div className="flex items-center bg-gray-200 p-2 rounded-md ms-3">
+                                    <div className="flex-1">
+                                        <p className="text-xs">{message.fileName}</p>
+                                        <p className="text-xs text-gray-500">{formattedDate(message.date)}</p>
+                                    </div>
+                                    <a
+                                        href={message.fileUrl}
+                                        download={message.fileName}
+                                        className="text-blue-500 hover:text-blue-700"
+                                    >
+                                        <i className="fas fa-download mr-1"></i>
+                                    </a>
+                                </div>
+                            )}
+                            {!message.fileUrl && !message.fileMame && (
+                                <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
+                                    <p className="text-xs">{message.messageText}</p>
+                                    <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
+                                </div>
+                            )}
+                            {/* <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
                                 <p className="text-xs">{message.messageText}</p>
                                 <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
-                            </div>
+                            </div> */}
                             {message.recipeintId === memberId && (
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />
@@ -80,10 +117,31 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuCl
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />
                             )}
-                            <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
+                            {message.fileUrl && message.fileName && (
+                                <div className="flex items-center bg-gray-200 p-2 rounded-md ms-3">
+                                    <div className="flex-1">
+                                        <p className="text-xs">{message.fileName}</p>
+                                        <p className="text-xs text-gray-500">{formattedDate(message.date)}</p>
+                                    </div>
+                                    <a
+                                        href={message.fileUrl}
+                                        download={message.fileName}
+                                        className="text-blue-500 hover:text-blue-700"
+                                    >
+                                        <i className="fas fa-download mr-1"></i>
+                                    </a>
+                                </div>
+                            )}
+                            {!message.fileUrl && !message.fileName && (
+                                <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
+                                    <p className="text-xs">{message.messageText}</p>
+                                    <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
+                                </div>
+                            )}
+                            {/* <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
                                 <p className="text-xs">{message.messageText}</p>
                                 <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
-                            </div>
+                            </div> */}
                             {message.recipientId === memberId && (
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />
@@ -92,16 +150,25 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onMenuCl
                     ))
                 ))}
             </div>
+            <input
+                id="fileInput"
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+            />
             <div className="p-4 bg-white sticky bottom-0">
-                <form onSubmit={handleSubmit}>
-                    <div className="flex items-center">
-                        <input type="text" className="form-control flex-1 mr-4" placeholder="Type message"
-                            value={messageText} onChange={(e) => setMessageText(e.target.value)} />
-                        <button type="submit" className="bg-purple-500 text-white py-2 px-4 rounded"><i className="fas fa-paper-plane"></i></button>
-                    </div>
-                </form>
+                <div className="flex items-center">
+                    <input type="text" className="form-control flex-1 mr-4" placeholder="Type message"
+                        value={messageText} onChange={(e) => setMessageText(e.target.value)} />
+                    <button type="button" className="bg-purple-500 text-white py-2 px-4 me-2 rounded" onClick={handlePaperClipClick}>
+                        <i className="fas fa-paperclip"></i>
+                    </button>
+                    <button type="submit" className="bg-purple-500 text-white py-2 px-4 rounded" onClick={handleSubmit}>
+                        <i className="fas fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
-        </div>
+        </div >
     );
 };
 
