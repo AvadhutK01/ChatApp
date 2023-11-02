@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const LoginForm = () => {
     const [phoneNo, setPhoneNo] = useState('');
     const [password, setPassword] = useState('');
@@ -10,9 +11,19 @@ const LoginForm = () => {
         try {
             const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/user/verify-login`, { phoneNo, password });
             if (response.data.message === 'success') {
-                alert('Login Successful!');
-                localStorage.setItem('token', response.data.token);
-                window.location = `/chatMain`;
+                toast.success("Login success", {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 1000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                setTimeout(() => {
+                    localStorage.setItem('token', response.data.token);
+                    window.location = `/chatMain`;
+                }, 2000)
             }
         } catch (error) {
             if (error.response.data) {
@@ -30,7 +41,9 @@ const LoginForm = () => {
     };
 
     return (
+
         <div className="main">
+            <ToastContainer />
             <section className="sign-in">
                 <div className="container">
                     <div className="signin-content">

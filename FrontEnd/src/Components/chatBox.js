@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin }) => {
+const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin }) => {
     const [messageText, setMessageText] = useState('');
     const [menuVisible, setMenuVisible] = useState(false);
+    console.log("rstatus" + JSON.stringify(rstatus));
+    console.log("status" + status);
     const formattedDate = (date) => {
         return moment(date, 'DD/MM/YYYY, hh:mm:ss A').format('DD/MM/YYYY | hh:mm A');
     };
@@ -38,6 +40,19 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onFileSu
         <div className="lg:w-2/3 chat-box" id="myChatId">
             <div className="text-center bg-white rounded border-1 h-7 d-flex justify-content-between align-items-center p-2">
                 <span className="font-bold text-lg text-purple-500" id="DisplayName">{displayName}</span>
+                {type === 'one' && rstatus && rstatus.chatId === memberId && rstatus.status && (
+                    <div className="font-bold text-lg text-purple-500" id="status">
+                        {rstatus.status}
+                    </div>
+                )}
+
+                {type === 'one' && !rstatus.chatId && status && (
+                    <div className="font-bold text-lg text-purple-500" id="status">
+                        {status}
+                    </div>
+                )}
+
+
                 <div id="boxy">
                 </div>
                 <div className="d-flex align-items-center">
@@ -62,8 +77,8 @@ const ChatBox = ({ memberId, displayName, chatContent, onMessageSubmit, onFileSu
                     {
                         menuVisible && (type == 'one' && (
                             <div className="menu">
-                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('addMember')}>Save contact</button>
-                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('removeMember')}>Delete Contact</button>
+                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('saveContact')}>Save contact</button>
+                                <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('Deletecontact')}>Delete Contact</button>
                             </div>
                         ))
                     }

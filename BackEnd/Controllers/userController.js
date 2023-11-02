@@ -61,8 +61,7 @@ module.exports.verifyLogin = async (req, res) => {
         if (data) {
             const checkLogin = await bcrypt.compare(password, data.password);
             if (checkLogin) {
-                const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
-                await userModel.update({ lastSeen: currentDateTime }, { where: { id: data.id }, transaction: t });
+                // await userModel.update({ lastSeen: currentDateTime }, { where: { id: data.id }, transaction: t });
 
                 await t.commit();
                 res.status(201).json({ message: 'success', token: generateAccessToken(data.id) });

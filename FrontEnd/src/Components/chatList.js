@@ -7,6 +7,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
         if (latestMessageFromMember) {
             const updatedMessages = latestMessages.map(messageInfo => {
                 if (latestMessageFromMember.senderId) {
+                    console.log(messageInfo.userId === latestMessageFromMember.GroupNameDatumId);
                     if (messageInfo.userId === latestMessageFromMember.GroupNameDatumId) {
                         if (latestMessageFromMember.fileUrl && latestMessageFromMember.fileName) {
                             return {
@@ -31,7 +32,8 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                 }
 
                 if (latestMessageFromMember.recipeintId) {
-                    if (messageInfo.recipeintId == latestMessageFromMember.recipeintId) {
+                    console.log(messageInfo.recipeintId == latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId == messageInfo.recipeintId);
+                    if (messageInfo.recipeintId == latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId == messageInfo.recipeintId) {
                         if (latestMessageFromMember.fileName && latestMessageFromMember.fileUrl) {
                             return {
                                 userId: latestMessageFromMember.userDatumId,
@@ -167,13 +169,14 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                 </div>
                 <ul className="list-unstyled chat-list overflow-y-auto h-96" id="chat-list">
                     {chats.map(chat => {
+                        // console.log(chat);
                         const latestMessageInfo = latestMessages.find(item => item.chatId === chat.id);
                         const messageTime = latestMessageInfo ? moment(latestMessageInfo.time, 'MMMM Do YYYY, h:mm:ss a') : null;
                         const isToday = messageTime && messageTime.isSame(moment(), 'day');
                         const formattedTime = latestMessageInfo && messageTime.isValid() ? (isToday ? messageTime.format('h:mm a') : messageTime.format('MMMM Do YYYY')) : 'N/A';
                         return (
                             <li key={chat.id} className="p-2 border-b border-gray-200 flex justify-between items-center">
-                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id)}>
+                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id, chat.lastSeen)}>
                                     <div className="flex items-center">
                                         <div className="pr-4">
                                             <p className="font-semibold mb-0">{chat.name}</p>

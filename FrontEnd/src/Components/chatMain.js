@@ -17,6 +17,8 @@ const ChatMain = () => {
     const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState([])
     const [displayName, setDisplayName] = useState('');
+    const [status, setStatus] = useState('');
+    const [rstatus, setRStatus] = useState([]);
     const [memberId, setMemberId] = useState('');
     const [type, setType] = useState('');
     const [latestMessageFromMember, setlatestMessageFromMember] = useState([]);
@@ -26,6 +28,14 @@ const ChatMain = () => {
     const [MemberList, setMembersList] = useState([]);
     const [action, setAction] = useState('');
     const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
+    useEffect(() => {
+        updateStatus('Online');
+        setStatusSocket('Online')
+        // const data = { status: `Online`, chatId: memberId }
+        // socket.emit('userStatus', data);
+        // const data = { status: 'Online', chatId: memberId };
+        // socket.emit('userStatus', data);
+    }, []);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -109,7 +119,6 @@ const ChatMain = () => {
                 }
             }
             else if (data.type === 'many') {
-                console.log(data);
                 const receivedMessage = {
                     fileUrl: data.fileUrl,
                     fileName: data.fileName,
@@ -141,7 +150,33 @@ const ChatMain = () => {
             fetchChat(memberId);
         }
     }, [type, memberId]);
-    const handleChatClick = async (chatId, displayName, type, id) => {
+
+    useEffect(() => {
+        socket.on("set-status", (data) => {
+            console.log(data);
+            setRStatus(data);
+        });
+        return () => {
+            socket.off('set-status');
+        };
+    }, []);
+
+
+    const updateStatus = async (status) => {
+        try {
+            await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/set-status`, {
+                status: status
+            }, {
+                headers: {
+                    'Authorization': localStorage.getItem('token')
+                }
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleChatClick = async (chatId, displayName, type, id, lastSeen) => {
         try {
             setType(type);
             await fetchChat(chatId);
@@ -180,6 +215,32 @@ const ChatMain = () => {
         }
 
     };
+    // console.log(memberId);
+    useEffect(() => {
+        const handleVisibilityChange = async () => {
+            // console.log("member" + memberId);
+            if (document.hidden) {
+                const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
+                updateStatus(`Last seen At: ${currentDateTime}`);
+                const data = { status: `Last seen At: ${currentDateTime}`, chatId: memberId }
+                socket.emit('userStatus', data);
+            } else {
+                updateStatus('Online');
+                const data = { status: 'Online', chatId: memberId }
+                socket.emit('userStatus', data);
+            }
+
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [memberId]);
+
+    function setStatusSocket(status) {
+        // console.log("member" + memberId);
+
+    }
     const handleMessageSubmit = async (messageText) => {
         const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A')
         const data = { memberId: memberId, messageText: messageText, currentDateTime: currentDateTime };
@@ -241,6 +302,15 @@ const ChatMain = () => {
             }
         });
     }
+    const PerformActionToContact = async (name) => {
+        const data = { memberId: memberId, action: action, name: name };
+        await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/actionOnContact`, { data }, {
+            headers: {
+                'Authorization': localStorage.getItem('token')
+            }
+        });
+        window.Location = '/chatMain';
+    }
 
     const handleGroupNameChange = (e) => {
         setGroupName(e.target.value);
@@ -262,13 +332,18 @@ const ChatMain = () => {
         setIsLIstOpen(false);
     }
     async function fetchMembers(action) {
-        const token = localStorage.getItem('token');
-        const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/getMembersList`, { action, memberId }, {
-            headers: {
-                "Authorization": token
-            }
-        });
-        setMembersList(result.data);
+        if (action == 'addMember' || action == 'setAdmin' || action == 'removeMember') {
+            const token = localStorage.getItem('token');
+            const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/getMembersList`, { action, memberId }, {
+                headers: {
+                    "Authorization": token
+                }
+            });
+            setMembersList(result.data);
+        }
+        else if (action == 'saveContact' || action == 'Deletecontact') {
+            setMembersList([]);
+        }
     }
     async function fetchChat(chatId) {
         setMemberId(chatId);
@@ -280,7 +355,15 @@ const ChatMain = () => {
                     'Authorization': localStorage.getItem('token')
                 }
             });
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/get-status`, {
+                memberId: chatId
+            }, {
+                headers: {
+                    'Authorization': localStorage.getItem('token')
+                }
+            });
             if (result) {
+                setStatus(response.data.lastSeen);
                 setMemberId(chatId);
                 setSelectedChat(result.data);
             }
@@ -310,6 +393,7 @@ const ChatMain = () => {
 
         }
     }
+
     return (
         <div className="bg-gray-100">
             <header className="bg-purple-500 text-white text-center py-2 fixed top-0 w-full">
@@ -326,6 +410,8 @@ const ChatMain = () => {
                     {selectedChat && (
                         <ChatBox
                             displayName={displayName}
+                            status={status}
+                            rstatus={rstatus}
                             chatContent={selectedChat}
                             memberId={memberId}
                             type={type}
@@ -358,7 +444,8 @@ const ChatMain = () => {
                         closeModal={handleListClose}
                         members={MemberList}
                         action={action}
-                        onAddMember={PerformActionToGroup}
+                        onContactActionClick={PerformActionToContact}
+                        onGroupActionClick={PerformActionToGroup}
                     />
                 </div>
             </div>

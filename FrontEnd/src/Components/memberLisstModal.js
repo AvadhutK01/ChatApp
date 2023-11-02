@@ -1,6 +1,12 @@
-import React from 'react';
+import { React, useState } from 'react';
 
-const MemberListModal = ({ showModal, closeModal, action, members, onAddMember }) => {
+const MemberListModal = ({ showModal, closeModal, action, members, onGroupActionClick, onContactActionClick }) => {
+    const [contactName, setContactName] = useState('');
+    // console.log(action);
+    const handleSaveContact = () => {
+        onContactActionClick(contactName);
+        closeModal();
+    };
     return (
         showModal && (
             <div className="modal fade show" style={{ display: 'block' }}>
@@ -13,44 +19,112 @@ const MemberListModal = ({ showModal, closeModal, action, members, onAddMember }
                             </button>
                         </div>
                         <div className="modal-body">
-                            <ul className="list-group">{
-                                action === 'addMember' && (
-                                    <>
-                                        {members.map((member, index) => (
-                                            <li className="list-group-item d-flex justify-content-between" key={index}>
-                                                {member.ContactName}
-                                                <button className="btn btn-primary" onClick={() => onAddMember(member.memberId, action, member.ContactName)}>
-                                                    Add
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </>
-                                )}{
-                                    action === 'setAdmin' && (
-                                        <>
-                                            {members.map((member, index) => (
-                                                <li className="list-group-item d-flex justify-content-between" key={index}>
-                                                    {member.ContactName}
-                                                    <button className="btn btn-primary" onClick={() => onAddMember(member.userDatumId, action)}>
-                                                        Set Admin
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </>
-                                    )}{
-                                    action === 'removeMember' && (
-                                        <>
-                                            {members.map((member, index) => (
-                                                <li className="list-group-item d-flex justify-content-between" key={index}>
-                                                    {member.ContactName}
-                                                    <button className="btn btn-primary" onClick={() => onAddMember(member.userDatumId, action)}>
-                                                        Remove
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </>
-                                    )}
-                            </ul>
+                            <>
+                                {
+                                    action === 'saveContact' && (
+                                        <div className="form-group">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="contactName"
+                                                value={contactName}
+                                                onChange={(e) => setContactName(e.target.value)}
+                                                placeholder='Enter Contact Name'
+                                            />
+                                            <button className="btn btn-primary mt-2" onClick={handleSaveContact}>
+                                                Save Contact
+                                            </button>
+                                        </div>
+                                    )
+                                }
+                                {action === 'Deletecontact' && (
+                                    <div> <p>Are you sure you want to delete this contact?</p>
+                                        <div className="modal-footer">
+                                            <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                                                Cancel
+                                            </button>
+                                            <button type="button" className="btn btn-danger" onClick={() => {
+                                                onContactActionClick('');
+                                                closeModal();
+                                            }}>
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                )
+                                }
+
+                                {action === 'leaveGroup' && (
+                                    <div> <p>Are you sure you want to delete this contact?</p>
+                                        <div className="modal-footer">
+                                            <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                                                Cancel
+                                            </button>
+                                            <button type="button" className="btn btn-danger" onClick={() => {
+                                                onGroupActionClick("", action, "")
+                                                // onGroupActionClick('');
+                                                closeModal();
+                                            }}>
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                )
+                                }
+
+
+                            </>
+                            <>
+                                {
+                                    (
+                                        action === 'addMember' ||
+                                        action === 'removeMember' ||
+                                        action === 'setAdmin'
+                                    ) && (
+
+                                        <ul className="list-group">{
+                                            action === 'addMember' && (
+                                                <>
+                                                    {members.map((member, index) => (
+                                                        <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                            {member.ContactName}
+                                                            <button className="btn btn-primary" onClick={() => onGroupActionClick(member.memberId, action, member.ContactName)}>
+                                                                Add
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </>
+                                            )}
+                                            {
+                                                action === 'removeMember' && (
+                                                    <>
+                                                        {members.map((member, index) => (
+                                                            <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                                {member.ContactName}
+                                                                <button className="btn btn-primary" onClick={() => onGroupActionClick(member.userDatumId, action)}>
+                                                                    Remove
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                    </>
+                                                )}
+                                            {
+                                                action === 'setAdmin' && (
+                                                    <>
+                                                        {members.map((member, index) => (
+                                                            <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                                {member.ContactName}
+                                                                <button className="btn btn-primary" onClick={() => onGroupActionClick(member.userDatumId, action)}>
+                                                                    Set Admin
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                    </>
+                                                )}
+                                        </ul>
+                                    )
+                                }
+                            </>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" onClick={closeModal}>

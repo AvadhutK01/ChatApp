@@ -55,6 +55,30 @@ module.exports.getChatList = async (req, res) => {
 };
 
 
+module.exports.setStatus = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const status = req.body.status;
+        console.log(userId);
+        console.log(status);
+        await user.update({ lastSeen: status }, { where: { id: userId } });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+module.exports.getStatus = async (req, res) => {
+    try {
+        const memberId = req.body.memberId;
+        const result = await user.findOne({ where: { id: memberId }, attributes: ['lastSeen'] });
+        return res.status(201).json(result)
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 module.exports.addContact = async (req, res) => {
     try {
         const id = req.user.id;
@@ -114,6 +138,7 @@ module.exports.performActionToGroup = async (req, res) => {
         const MemberId = parseInt(req.body.data.memberId);
         const name = req.body.data.contactName;
         const action = req.body.data.action;
+        const userId = req.user.id;
         if (action === 'addMember') {
             await ChatGroupMembersData.create({
                 id: getRandomInt(100000, 999999),
@@ -131,10 +156,35 @@ module.exports.performActionToGroup = async (req, res) => {
             await ChatGroupMembersData.update({ isAdmin: 1 }, { where: { userDatumId: MemberId, GroupNameDatumId: GroupId } })
             return res.status(201).json({ message: "success" });
         }
+        if (action === 'leaveGroup') {
+            await ChatGroupMembersData.destroy({ where: { userDatumId: userId, GroupNameDatumId: GroupId } })
+            return res.status(201).send('Deleted');
+        }
     } catch (error) {
         console.log(error)
     }
 }
+
+module.exports.performActionToContact = async (req, res) => {
+    try {
+        const action = req.body.data.action;
+        const MemberId = parseInt(req.body.data.memberId);
+        const userId = req.user.id;
+        if (action === 'saveContact') {
+            const name = req.body.data.name;
+            await ChatMembersData.update({ ContactName: name }, { where: { memberId: MemberId, userDatumId: userId } });
+            return res.status(201).send("Success");
+        }
+        else if (action === 'Deletecontact') {
+            await ChatMembersData.destroy({ where: { memberId: MemberId, userDatumId: userId } })
+            return res.status(201).send('Deleted');
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
 
 module.exports.addMessage = async (req, res) => {
     try {
