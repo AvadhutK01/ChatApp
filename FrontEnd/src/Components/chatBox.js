@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin }) => {
+const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin, onChatTypeClick }) => {
     const [messageText, setMessageText] = useState('');
     const [menuVisible, setMenuVisible] = useState(false);
+    const [chatType, setChatType] = useState('todayChat')
     console.log("rstatus" + JSON.stringify(rstatus));
     console.log("status" + status);
     const formattedDate = (date) => {
@@ -35,6 +36,14 @@ const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessag
     const handleMenuClick = () => {
         setMenuVisible(!menuVisible);
     };
+    const handleChatTypeClick = () => {
+        const newChatType = chatType === 'todayChat' ? 'archiveChat' : 'todayChat';
+        setChatType(newChatType);
+        onChatTypeClick(newChatType);
+    };
+    const buttonText = chatType === 'todayChat' ? 'Archived Chat' : 'Today Chat';
+
+
     const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
     return (
         <div className="lg:w-2/3 chat-box" id="myChatId">
@@ -70,6 +79,7 @@ const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessag
                                     <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('removeMember')}>Remove Member</button>
                                 </>
                             )}
+                            <button className="btn btn-primary btn-sm" onClick={handleChatTypeClick}>{buttonText}</button>
                             <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('leaveGroup')}>Leave Group</button>
                         </div>
                     )}
@@ -78,6 +88,7 @@ const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessag
                         menuVisible && (type == 'one' && (
                             <div className="menu">
                                 <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('saveContact')}>Save contact</button>
+                                <button className="btn btn-primary btn-sm" onClick={handleChatTypeClick}>{buttonText}</button>
                                 <button className="btn btn-primary btn-sm" onClick={() => handleMenuItemClick('Deletecontact')}>Delete Contact</button>
                             </div>
                         ))
@@ -93,8 +104,6 @@ const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessag
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />
                             )}
-                            {/* fileUrl: data.fileUrl, */}
-                            {/* filename:data.filename, */}
                             {message.fileUrl && message.fileName && (
                                 <div className="flex items-center bg-gray-200 p-2 rounded-md ms-3">
                                     <div className="flex-1">
@@ -116,10 +125,6 @@ const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessag
                                     <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
                                 </div>
                             )}
-                            {/* <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
-                                <p className="text-xs">{message.messageText}</p>
-                                <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
-                            </div> */}
                             {message.recipeintId === memberId && (
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />
@@ -153,10 +158,6 @@ const ChatBox = ({ memberId, displayName, status, rstatus, chatContent, onMessag
                                     <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
                                 </div>
                             )}
-                            {/* <div className={`bg-gray-200 p-2 rounded-md ms-3`}>
-                                <p className="text-xs">{message.messageText}</p>
-                                <p className="text-xs text-gray-500 float-right">{formattedDate(message.date)}</p>
-                            </div> */}
                             {message.recipientId === memberId && (
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
                                     alt="avatar 1" className="w-12 h-12 rounded-full" />

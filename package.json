@@ -17,8 +17,8 @@
     "util": "^0.12.5"
   },
   "scripts": {
-    "server": "cd backend && nodemon app.js",
-    "client": "cd frontend && npm start",
+    "server": "cd BackEnd && nodemon app.js",
+    "client": "cd FrontEnd && npm start",
     "dev": "concurrently \"npm run client\" \"npm run server\""
   }
 }

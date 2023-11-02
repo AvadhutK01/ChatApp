@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ChatList from './chatList';
 import ChatBox from './chatBox';
 import isEqual from 'lodash/isEqual';
@@ -63,7 +63,7 @@ const ChatMain = () => {
                     recipeintId: data.recipeintId
                 };
                 if (!isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
-                    if ((memberId == data.recipeintId && userId == data.userDatumId) || (memberId == data.userDatumId && userId == data.recipeintId)) {
+                    if ((memberId === data.recipeintId && userId === data.userDatumId) || (memberId === data.userDatumId && userId === data.recipeintId)) {
                         setSelectedChat(prevChat => [...prevChat, receivedMessage]);
                     }
                     setlatestMessageFromMember({
@@ -83,7 +83,7 @@ const ChatMain = () => {
                     GroupNameDatumId: data.GroupNameDatumId
                 };
                 if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
-                    if (memberId == data.GroupNameDatumId || userId == data.senderId)
+                    if (memberId === data.GroupNameDatumId || userId === data.senderId)
                         setSelectedChat(prevChat => [...prevChat, receivedMessage]);
                 }
                 setlatestMessageFromMember({
@@ -105,7 +105,7 @@ const ChatMain = () => {
                     recipeintId: data.recipeintId
                 };
                 if (!isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
-                    if ((memberId == data.recipeintId && userId == data.userDatumId) || (memberId == data.userDatumId && userId == data.recipeintId)) {
+                    if ((memberId === data.recipeintId && userId === data.userDatumId) || (memberId === data.userDatumId && userId === data.recipeintId)) {
                         setSelectedChat(prevChat => [...prevChat, receivedMessage]);
                     }
                     setlatestMessageFromMember({
@@ -127,7 +127,7 @@ const ChatMain = () => {
                     GroupNameDatumId: data.GroupNameDatumId
                 };
                 if (selectedChat.length === 0 || !isEqual(selectedChat[selectedChat.length - 1], receivedMessage)) {
-                    if (memberId == data.GroupNameDatumId || userId == data.senderId)
+                    if (memberId === data.GroupNameDatumId || userId === data.senderId)
                         setSelectedChat(prevChat => [...prevChat, receivedMessage]);
                 }
                 setlatestMessageFromMember({
@@ -144,7 +144,7 @@ const ChatMain = () => {
             socket.off('receive-file');
             socket.off('receive-message');
         };
-    }, [type, memberId, selectedChat, chatIdofMember]);
+    }, [type, memberId, selectedChat, chatIdofMember, userId]);
     useEffect(() => {
         if (memberId && type) {
             fetchChat(memberId);
@@ -332,7 +332,7 @@ const ChatMain = () => {
         setIsLIstOpen(false);
     }
     async function fetchMembers(action) {
-        if (action == 'addMember' || action == 'setAdmin' || action == 'removeMember') {
+        if (action === 'addMember' || action === 'setAdmin' || action === 'removeMember') {
             const token = localStorage.getItem('token');
             const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/getMembersList`, { action, memberId }, {
                 headers: {
@@ -341,7 +341,7 @@ const ChatMain = () => {
             });
             setMembersList(result.data);
         }
-        else if (action == 'saveContact' || action == 'Deletecontact') {
+        else if (action === 'saveContact' || action === 'Deletecontact') {
             setMembersList([]);
         }
     }
@@ -349,7 +349,8 @@ const ChatMain = () => {
         setMemberId(chatId);
         if (type === 'one') {
             const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/get-chat`, {
-                memberId: chatId
+                memberId: chatId,
+                chatType: 'todayChat'
             }, {
                 headers: {
                     'Authorization': localStorage.getItem('token')
@@ -373,7 +374,8 @@ const ChatMain = () => {
         }
         else if (type === 'many') {
             const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/get-chatfromGroup`, {
-                groupId: chatId
+                groupId: chatId,
+                chatType: 'todayChat'
             }, {
                 headers: {
                     'Authorization': localStorage.getItem('token')
@@ -393,7 +395,56 @@ const ChatMain = () => {
 
         }
     }
+    async function onChatTypeClick(chatType) {
+        console.log(memberId);
+        if (type === 'one') {
+            const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/get-chat`, {
+                memberId: memberId,
+                chatType: chatType
+            }, {
+                headers: {
+                    'Authorization': localStorage.getItem('token')
+                }
+            });
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/get-status`, {
+                memberId: memberId
+            }, {
+                headers: {
+                    'Authorization': localStorage.getItem('token')
+                }
+            });
+            if (result) {
+                setStatus(response.data.lastSeen);
+                setMemberId(memberId);
+                setSelectedChat(result.data);
+            }
+            else {
+                setSelectedChat([]);
+            }
+        }
+        else if (type === 'many') {
+            const result = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/get-chatfromGroup`, {
+                groupId: memberId,
+                chatType: chatType
+            }, {
+                headers: {
+                    'Authorization': localStorage.getItem('token')
+                }
+            });
 
+            if (result.data.isAdmin) {
+                setAdmin(true);
+            }
+
+            if (result.data.result) {
+                setMemberId(memberId);
+                setSelectedChat(result.data.result);
+            } else {
+                setSelectedChat([]);
+            }
+
+        }
+    }
     return (
         <div className="bg-gray-100">
             <header className="bg-purple-500 text-white text-center py-2 fixed top-0 w-full">
@@ -425,6 +476,7 @@ const ChatMain = () => {
                                     setIsLIstOpen(true)
                                 }
                             }
+                            onChatTypeClick={onChatTypeClick}
                         />
                     )}
                     <ChatModal

@@ -169,7 +169,6 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                 </div>
                 <ul className="list-unstyled chat-list overflow-y-auto h-96" id="chat-list">
                     {chats.map(chat => {
-                        // console.log(chat);
                         const latestMessageInfo = latestMessages.find(item => item.chatId === chat.id);
                         const messageTime = latestMessageInfo ? moment(latestMessageInfo.time, 'MMMM Do YYYY, h:mm:ss a') : null;
                         const isToday = messageTime && messageTime.isSame(moment(), 'day');

@@ -22,6 +22,10 @@ const GroupchatStorageDb = require('./Models/chatGroupDataStorageModel');
 const GroupNameData = require('./Models/chatGroupsModel');
 const ChatGroupFileModal = require('./Models/chatGroupFileModal');
 const ChatMemberFileModal = require('./Models/chatMemberFileModal');
+const ArchiveChatGroupFileModal = require('./Models/archiveChatGroupFileModal');
+const ArchiveGroupchatStorageDb = require('./Models/archiveChatGroupDataStorage');
+const ArchivechatStorageDb = require('./Models/archiveChatStorageModel');
+const ArchiveChatMemberFileModal = require('./Models/archievChatMemberFileModal');
 app.use(cors({
     origin: '*'
 }));
@@ -31,8 +35,12 @@ user.hasMany(ChatMembersData);
 ChatMembersData.belongsTo(user);
 user.hasMany(chatStorageDb);
 chatStorageDb.belongsTo(user);
+user.hasMany(ArchiveGroupchatStorageDb);
+ArchivechatStorageDb.belongsTo(user);
 user.hasMany(ChatMemberFileModal);
 ChatMemberFileModal.belongsTo(user);
+user.hasMany(ArchiveChatMemberFileModal);
+ArchiveChatMemberFileModal.hasMany(user)
 user.hasMany(ChatGroupMembersData);
 ChatGroupMembersData.belongsTo(user);
 GroupNameData.hasMany(ChatGroupMembersData);
@@ -41,8 +49,12 @@ user.hasMany(GroupNameData);
 GroupNameData.belongsTo(user);
 GroupNameData.hasMany(GroupchatStorageDb);
 GroupchatStorageDb.belongsTo(GroupNameData);
+GroupNameData.hasMany(ArchiveGroupchatStorageDb)
+ArchiveGroupchatStorageDb.belongsTo(GroupNameData)
 GroupNameData.hasMany(ChatGroupFileModal);
 ChatGroupFileModal.belongsTo(GroupNameData);
+GroupNameData.hasMany(ArchiveChatGroupFileModal);
+ArchiveChatGroupFileModal.belongsTo(GroupNameData);
 app.use("/user", userRouter);
 app.use('/chat', chatRouter);
 app.use(express.static(path.join(__dirname, '..', 'FrontEnd', 'Public')));
