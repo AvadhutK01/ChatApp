@@ -14,6 +14,10 @@ const ChatGroupMembersData = sequelize.define('ChatGroupMembersData', {
         type: Sequelize.STRING,
         defaultValue: 'many'
     },
+    isMessage: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+    },
     isAdmin: {
         type: Sequelize.BOOLEAN,
         defaultValue: false

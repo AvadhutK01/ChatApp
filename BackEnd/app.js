@@ -1,15 +1,14 @@
 const express = require('express');
 const app = express();
-const http = require('http').createServer(app);
 const bodyParser = require('body-parser');
-const io = require('socket.io')(http, {
+require('dotenv').config();
+const io = require('socket.io')(app.listen(4000), {
     cors: {
-        origin: "http://localhost:3000",
+        origin: process.env.SOCKET_FRONT_HOST,
         methods: ["GET", "POST"]
     }
 });
 const cors = require('cors');
-require('dotenv').config();
 const path = require('path');
 const sequelize = require('./dbConnect');
 const userRouter = require('./Routes/userRoutes');
@@ -40,7 +39,7 @@ ArchivechatStorageDb.belongsTo(user);
 user.hasMany(ChatMemberFileModal);
 ChatMemberFileModal.belongsTo(user);
 user.hasMany(ArchiveChatMemberFileModal);
-ArchiveChatMemberFileModal.hasMany(user)
+ArchiveChatMemberFileModal.belongsTo(user)
 user.hasMany(ChatGroupMembersData);
 ChatGroupMembersData.belongsTo(user);
 GroupNameData.hasMany(ChatGroupMembersData);
@@ -59,20 +58,26 @@ app.use("/user", userRouter);
 app.use('/chat', chatRouter);
 app.use(express.static(path.join(__dirname, '..', 'FrontEnd', 'Public')));
 sequelize.sync({ force: false, logging: false }).then(() => {
-    http.listen(4000, () => {
-        console.log('Server listening on port 4000');
-    });
-})
+    console.log('Server listening on port 4000');
+});
 io.on('connection', socket => {
-    console.log('connected at' + socket.id)
+    console.log('connected at' + socket.id);
     socket.on('send-message', (data) => {
         io.emit('receive-message', data);
-    })
+    });
     socket.on('send-file', (data) => {
-        io.emit('receive-file', data)
-    })
-    socket.on('userStatus', (data) => {
-        console.log(data);
-        io.emit('set-status', data);
-    })
-})
+        io.emit('receive-file', data);
+    });
+    socket.on('newMember', (data => {
+        io.emit('addNewUser', data);
+    }))
+    socket.on('setAdmin', (data => {
+        io.emit('setAdmin', data);
+    }))
+    socket.on('removeMember', (data => {
+        io.emit('removeMember', data);
+    }))
+    socket.on('setMessagefalse', (data => {
+        io.emit('setMessagefalse', data);
+    }))
+});

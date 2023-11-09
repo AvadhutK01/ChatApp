@@ -17,6 +17,10 @@ const ChatMembersData = sequelize.define('ChatMembersData', {
     type: {
         type: Sequelize.STRING,
         defaultValue: 'one'
+    },
+    isMessage: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
     }
 });
 module.exports = ChatMembersData;

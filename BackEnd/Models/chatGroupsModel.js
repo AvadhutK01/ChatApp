@@ -6,6 +6,10 @@ const GroupNameData = sequelize.define('GroupNameData', {
         primaryKey: true,
         allowNull: false
     },
+    profiePicture: {
+        type: Sequelize.STRING,
+        defaultValue: 'https://chatfilebucket.s3.eu-north-1.amazonaws.com/dpdefault.jpg'
+    },
     GroupName: {
         type: Sequelize.STRING,
         allowNull: false

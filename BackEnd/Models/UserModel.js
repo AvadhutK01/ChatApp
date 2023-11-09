@@ -6,6 +6,10 @@ const user = sequelize.define('userData', {
         primaryKey: true,
         allowNull: false
     },
+    profiePicture: {
+        type: Sequelize.STRING,
+        defaultValue: 'https://chatfilebucket.s3.eu-north-1.amazonaws.com/dpdefault.jpg'
+    },
     name: {
         type: Sequelize.STRING,
         allowNull: false
@@ -21,10 +25,6 @@ const user = sequelize.define('userData', {
         allowNull: false
     },
     password: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    lastSeen: {
         type: Sequelize.STRING,
         allowNull: false
     }

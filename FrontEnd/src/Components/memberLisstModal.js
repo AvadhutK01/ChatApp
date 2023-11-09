@@ -2,7 +2,6 @@ import { React, useState } from 'react';
 
 const MemberListModal = ({ showModal, closeModal, action, members, onGroupActionClick, onContactActionClick }) => {
     const [contactName, setContactName] = useState('');
-    // console.log(action);
     const handleSaveContact = () => {
         onContactActionClick(contactName);
         closeModal();
@@ -38,7 +37,7 @@ const MemberListModal = ({ showModal, closeModal, action, members, onGroupAction
                                     )
                                 }
                                 {action === 'Deletecontact' && (
-                                    <div> <p>Are you sure you want to delete this contact?</p>
+                                    <div> <p>Are you sure you want to delete this Contact?</p>
                                         <div className="modal-footer">
                                             <button type="button" className="btn btn-secondary" onClick={closeModal}>
                                                 Cancel
@@ -55,14 +54,13 @@ const MemberListModal = ({ showModal, closeModal, action, members, onGroupAction
                                 }
 
                                 {action === 'leaveGroup' && (
-                                    <div> <p>Are you sure you want to delete this contact?</p>
+                                    <div> <p>Are you sure you want to delete this Group?</p>
                                         <div className="modal-footer">
                                             <button type="button" className="btn btn-secondary" onClick={closeModal}>
                                                 Cancel
                                             </button>
                                             <button type="button" className="btn btn-danger" onClick={() => {
                                                 onGroupActionClick("", action, "")
-                                                // onGroupActionClick('');
                                                 closeModal();
                                             }}>
                                                 Delete

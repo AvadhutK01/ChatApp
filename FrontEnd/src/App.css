@@ -16,6 +16,11 @@ list-type-ulli,
   padding: 0
 }
 
+.badge.bg-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
 a:focus,
 a:active {
   text-decoration: none;
@@ -119,7 +124,7 @@ body {
 }
 
 .container {
-  width: 900px;
+  width: 100%;
   background: #fff;
   margin: 0 auto;
   box-shadow: 0 15px 16.83px .17px rgba(0, 0, 0, .05);
@@ -588,9 +593,7 @@ label.valid:after {
   }
 }
 
-/* style.css */
 
-/* Common styles for chat buttons */
 .chat-button {
   background-color: #fff;
   border: 1px solid #ced4da;
@@ -673,15 +676,11 @@ body {
 }
 
 .chat-list {
-  height: calc(92vh - 56px);
+  height: calc(100vh - 0px);
   overflow-y: auto;
 }
 
 @media (max-width: 800px) {
-  .chat-box {
-    display: none;
-  }
-
   .chat-list {
     height: calc(100vh - 56px);
   }
@@ -692,7 +691,7 @@ body {
 }
 
 .chat-box-content {
-  height: calc(100% - 85px);
+  height: calc(100% - 0px);
   overflow-y: auto;
 }
 

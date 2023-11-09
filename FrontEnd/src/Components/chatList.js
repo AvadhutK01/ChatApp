@@ -1,62 +1,67 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import moment from 'moment';
+import { jwtDecode } from 'jwt-decode';
 const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) => {
     const [latestMessages, setLatestMessages] = useState([]);
+    const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
     useEffect(() => {
-        if (latestMessageFromMember) {
-            const updatedMessages = latestMessages.map(messageInfo => {
-                if (latestMessageFromMember.senderId) {
-                    console.log(messageInfo.userId === latestMessageFromMember.GroupNameDatumId);
-                    if (messageInfo.userId === latestMessageFromMember.GroupNameDatumId) {
-                        if (latestMessageFromMember.fileUrl && latestMessageFromMember.fileName) {
-                            return {
-                                userId: latestMessageFromMember.GroupNameDatumId,
-                                senderId: latestMessageFromMember.senderId,
-                                chatId: messageInfo.chatId,
-                                message: "File",
-                                time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
-                            };
+        try {
+            if (latestMessageFromMember) {
+                const updatedMessages = latestMessages.map(messageInfo => {
+                    if (latestMessageFromMember.senderId) {
+                        if (messageInfo.userId === latestMessageFromMember.GroupNameDatumId) {
+                            if (latestMessageFromMember.fileUrl && latestMessageFromMember.fileName) {
+                                return {
+                                    userId: latestMessageFromMember.GroupNameDatumId,
+                                    senderId: latestMessageFromMember.senderId,
+                                    chatId: messageInfo.chatId,
+                                    message: "File",
+                                    time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                                };
+                            }
+                            if (!latestMessageFromMember.fileUrl && !latestMessageFromMember.fileName) {
+                                return {
+                                    userId: latestMessageFromMember.GroupNameDatumId,
+                                    senderId: latestMessageFromMember.senderId,
+                                    chatId: messageInfo.chatId,
+                                    message: latestMessageFromMember.message,
+                                    time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                                };
+                            }
                         }
-                        if (!latestMessageFromMember.fileUrl && !latestMessageFromMember.fileName) {
-                            return {
-                                userId: latestMessageFromMember.GroupNameDatumId,
-                                senderId: latestMessageFromMember.senderId,
-                                chatId: messageInfo.chatId,
-                                message: latestMessageFromMember.message,
-                                time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
-                            };
+                        return messageInfo;
+                    }
+
+                    if (latestMessageFromMember.recipeintId) {
+                        if (messageInfo.recipeintId == latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId == messageInfo.recipeintId) {
+                            if (latestMessageFromMember.fileName && latestMessageFromMember.fileUrl) {
+                                return {
+                                    userId: latestMessageFromMember.userDatumId,
+                                    recipeintId: latestMessageFromMember.recipeintId,
+                                    chatId: messageInfo.chatId,
+                                    message: "File",
+                                    time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                                };
+                            }
+                            if (!latestMessageFromMember.fileName && !latestMessageFromMember.fileUrl) {
+                                return {
+                                    userId: latestMessageFromMember.userDatumId,
+                                    recipeintId: latestMessageFromMember.recipeintId,
+                                    chatId: messageInfo.chatId,
+                                    message: latestMessageFromMember.message,
+                                    time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
+                                };
+                            }
                         }
                     }
                     return messageInfo;
-                }
-
-                if (latestMessageFromMember.recipeintId) {
-                    console.log(messageInfo.recipeintId == latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId == messageInfo.recipeintId);
-                    if (messageInfo.recipeintId == latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId == messageInfo.recipeintId) {
-                        if (latestMessageFromMember.fileName && latestMessageFromMember.fileUrl) {
-                            return {
-                                userId: latestMessageFromMember.userDatumId,
-                                recipeintId: latestMessageFromMember.recipeintId,
-                                chatId: messageInfo.chatId,
-                                message: "File",
-                                time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
-                            };
-                        }
-                        if (!latestMessageFromMember.fileName && !latestMessageFromMember.fileUrl) {
-                            return {
-                                userId: latestMessageFromMember.userDatumId,
-                                recipeintId: latestMessageFromMember.recipeintId,
-                                chatId: messageInfo.chatId,
-                                message: latestMessageFromMember.message,
-                                time: moment(latestMessageFromMember.time, 'DD/MM/YYYY, hh:mm:ss A').format('MMMM Do YYYY, h:mm a')
-                            };
-                        }
-                    }
-                }
-                return messageInfo;
-            });
-            setLatestMessages([...updatedMessages]);
+                });
+                setLatestMessages([...updatedMessages]);
+            }
+        }
+        catch (err) {
+            console.log(err);
         }
     }, [latestMessageFromMember]);
 
@@ -117,7 +122,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                             });
                         }
                     } catch (error) {
-                        console.error(error);
+                        console.log(error);
                     }
                 }
                 setLatestMessages(latestMessagesArray);
@@ -142,7 +147,6 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
             return null;
         }
     };
-
     const getChatMessagesForMemberId = async (memberId) => {
         try {
             const token = localStorage.getItem('token');
@@ -160,8 +164,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
     return (
         <div className="lg:w-1/3 chat-list border-r border-gray-300 flex flex-col justify-between">
             <div className="p-4 bg-white rounded">
-                <input type="search" className="form-control rounded mb-4" placeholder="Search" />
-                <div className="fixed bottom-10" style={{ marginLeft: '20%' }}>
+                <div className="fixed bottom-10" style={{ marginLeft: '25%' }}>
                     <button className="bg-purple-500 text-white py-2 px-3 mb-3 rounded-circle shadow-lg"
                         id="add-member" onClick={onMenuClick}>
                         <i className="fas fa-plus"></i>
@@ -173,15 +176,28 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                         const messageTime = latestMessageInfo ? moment(latestMessageInfo.time, 'MMMM Do YYYY, h:mm:ss a') : null;
                         const isToday = messageTime && messageTime.isSame(moment(), 'day');
                         const formattedTime = latestMessageInfo && messageTime.isValid() ? (isToday ? messageTime.format('h:mm a') : messageTime.format('MMMM Do YYYY')) : 'N/A';
+                        let matchedIsMessage = null;
+                        if (chat.type === 'many') {
+                            if (chat.isMessage) {
+                                const foundMessage = chat.isMessage.find(message => message.userDatumId === userId);
+                                if (foundMessage) {
+                                    matchedIsMessage = foundMessage.isMessage;
+                                }
+                            }
+                        }
                         return (
                             <li key={chat.id} className="p-2 border-b border-gray-200 flex justify-between items-center">
-                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id, chat.lastSeen)}>
+                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id, chat.lastSeen, chat.profilePicture)}>
                                     <div className="flex items-center">
                                         <div className="pr-4">
+                                            <img src={chat.profiePicture} alt="avatar 1" className="w-12 h-12 rounded-full" />
                                             <p className="font-semibold mb-0">{chat.name}</p>
                                             <p className="text-xs text-gray-500">
                                                 {latestMessageInfo ? latestMessageInfo.message : 'No messages yet'}
                                             </p>
+                                            {(matchedIsMessage ? matchedIsMessage === true : chat.isMessage === 1) && (
+                                                <p className="bg-danger rounded-full float-end">N</p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end">
@@ -191,6 +207,8 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                                     </div>
                                 </button>
                             </li>
+
+
                         );
                     })}
                 </ul>

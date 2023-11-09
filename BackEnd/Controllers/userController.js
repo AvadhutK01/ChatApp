@@ -1,31 +1,36 @@
 const userModel = require("../Models/UserModel");
 const bcrypt = require('bcrypt');
 const sequelize = require("../dbConnect");
-const path = require('path');
 const jwt = require('jsonwebtoken');
 const moment = require("moment/moment");
 const crypto = require('crypto');
-module.exports.getRegistrationPage = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'RegistrationPage.html'))
-}
-
-module.exports.getLoginPage = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'FrontEnd', 'Views', 'LoginPage.html'))
-}
-
-
+const AWS = require('aws-sdk');
 module.exports.RegisterUser = async (req, res) => {
     const newName = req.body.name;
     const newPhoneNO = req.body.phoneNo;
     const newEmail = req.body.email;
     const newPasswordInput = req.body.password;
     const transaction = await sequelize.transaction();
+    const file = req.file;
+    const filename = req.file.originalname;
     try {
+        const s3 = new AWS.S3({
+            accessKeyId: process.env.IAM_USER_KEY,
+            secretAccessKey: process.env.IAM_USER_SECRET
+        });
+        const params = {
+            Bucket: 'chatfilebucket',
+            Key: filename,
+            Body: file.buffer,
+            ACL: 'public-read',
+        };
+        const s3Response = await s3.upload(params).promise();
         const hashedPassword = await bcrypt.hash(newPasswordInput, 10);
         const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
         await userModel.create({
             id: getRandomInt(100000, 999999),
             name: newName,
+            profiePicture: s3Response.Location,
             phoneNO: newPhoneNO,
             email: newEmail,
             password: hashedPassword,
@@ -48,7 +53,6 @@ module.exports.RegisterUser = async (req, res) => {
 module.exports.verifyLogin = async (req, res) => {
     const phoneNO = req.body.phoneNo;
     const password = req.body.password;
-    console.log(req)
     const t = await sequelize.transaction();
     try {
         let data = await userModel.findOne({
@@ -61,8 +65,6 @@ module.exports.verifyLogin = async (req, res) => {
         if (data) {
             const checkLogin = await bcrypt.compare(password, data.password);
             if (checkLogin) {
-                // await userModel.update({ lastSeen: currentDateTime }, { where: { id: data.id }, transaction: t });
-
                 await t.commit();
                 res.status(201).json({ message: 'success', token: generateAccessToken(data.id) });
             } else {

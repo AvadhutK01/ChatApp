@@ -11,7 +11,9 @@ const ChatModal = ({
     onPhoneNumberChange,
     onAddContact,
     onAddGroup
+
 }) => {
+    const [file, setFile] = useState(null);
     const [activeButton, setActiveButton] = useState('contact');
     const handleClose = async () => {
         onClose();
@@ -29,12 +31,16 @@ const ChatModal = ({
 
     const handleAddGroup = async () => {
         try {
-            await onAddGroup();
+            await onAddGroup(file);
             setActiveButton('group');
             onClose();
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const handleFileChange = (e) => {
+        setFile(e.target.files[0]);
     };
     return (
         isModalOpen && (
@@ -66,6 +72,7 @@ const ChatModal = ({
                                 {activeButton === 'group' && (
                                     <div className="form-group">
                                         <input type="text" className="form-control" id="groupName" placeholder="Enter group name" value={groupName} onChange={onGroupNameChange} />
+                                        <input type="file" name="avatar" id="avatar" accept="image/*" onChange={handleFileChange} />
                                     </div>
                                 )}
                                 <div className="modal-footer">

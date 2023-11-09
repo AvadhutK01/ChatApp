@@ -7,15 +7,26 @@ const SignupForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [repeatPassword, setRepeatPassword] = useState('');
+    const [avatar, setAvatar] = useState(null);
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        setAvatar(file);
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/user/addUser`, {
-                name,
-                phoneNo,
-                email,
-                password,
-                repeatPassword,
+            console.log(avatar);
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('phoneNo', phoneNo);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('repeatPassword', repeatPassword);
+            formData.append('avatar', avatar);
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/user/addUser`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
             if (response.data.message === 'success') {
                 alert('Registration Successful!');
@@ -29,8 +40,8 @@ const SignupForm = () => {
             }
             console.error(error);
         }
-    };
 
+    }
     return (
         <div className="main">
             <section className="signup">
@@ -42,6 +53,9 @@ const SignupForm = () => {
                                 <div className="form-group">
                                     <label htmlFor="name"><i className="zmdi zmdi-account material-icons-name"></i></label>
                                     <input type="text" name="name" id="name" placeholder="Your Name" value={name} onChange={(e) => setName(e.target.value)} />
+                                </div>
+                                <div className="form-group">
+                                    <input type="file" name="avatar" id="avatar" accept="image/*" onChange={handleAvatarChange} />
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="pno"><i className="zmdi zmdi-email"></i></label>
