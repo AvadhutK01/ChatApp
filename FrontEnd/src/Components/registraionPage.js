@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import axios from 'axios';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const SignupForm = () => {
     const [name, setName] = useState('');
     const [phoneNo, setPhoneNo] = useState('');
@@ -29,67 +31,162 @@ const SignupForm = () => {
                 },
             });
             if (response.data.message === 'success') {
-                alert('Registration Successful!');
-                window.location = '/login';
+                toast.success("Registration Successful!", {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 1000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                setTimeout(() => {
+                    window.location = '/login';
+                }, 2000)
             }
         } catch (error) {
             if (error.response.data.message) {
-                alert(error.response.data.message);
+                toast.warning(error.response.data.message, {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 1000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
             } else {
-                alert('Internal Server Error!');
+                toast.error('Internal Server Error!', {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 1000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
             }
             console.error(error);
         }
 
     }
     return (
-        <div className="main">
-            <section className="signup">
-                <div className="container">
-                    <div className="signup-content">
-                        <div className="signup-form">
-                            <h2 className="form-title">Sign up</h2>
-                            <form method="POST" className="register-form" id="register-form" onSubmit={handleSubmit}>
-                                <div className="form-group">
-                                    <label htmlFor="name"><i className="zmdi zmdi-account material-icons-name"></i></label>
-                                    <input type="text" name="name" id="name" placeholder="Your Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <div className=" container">
+            <ToastContainer />
+            <div className="bg-white border rounded-5">
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card text-black" style={{ borderRadius: '25px' }}>
+                            <div className="card-body p-md-5">
+                                <div className="row justify-content-center">
+                                    <div className="col-md-10 col-lg-6 col-xl-5 order-2 order-lg-1">
+                                        <p className="text-center h1 fw-bold mb-5 mt-4">Sign up</p>
+                                        <form id="registrationForm" method='POST' onSubmit={handleSubmit}>
+                                            <div className="d-flex flex-row align-items-center mb-4">
+                                                <i className="fas fa-user fa-lg me-3 fa-fw"></i>
+                                                <div className="form-outline flex-fill mb-0">
+                                                    <input type="text" id="nameInput" name="nameInput" className="form-control"
+                                                        placeholder='Your Name' value={name} onChange={(e) => setName(e.target.value)} required />
+                                                    <div className="form-notch">
+                                                        <div className="form-notch-leading" style={{ width: "9px" }}></div>
+                                                        <div className="form-notch-middle" style={{ width: "71.2px" }}></div>
+                                                        <div className="form-notch-trailing"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="d-flex flex-row align-items-center mb-4">
+                                                <i className="fas fa-camera fa-lg me-3 fa-fw"></i>
+                                                <div className="form-outline flex-fill mb-0">
+                                                    <input type="file" id="avatar" name="avatar" accept="image/*" className="form-control"
+                                                        onChange={handleAvatarChange} />
+                                                    <div className="form-notch">
+                                                        <div className="form-notch-leading" style={{ width: "9px" }}></div>
+                                                        <div className="form-notch-middle" style={{ width: "71.2px" }}></div>
+                                                        <div className="form-notch-trailing"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="d-flex flex-row align-items-center mb-4">
+                                                <i className="fas fa-phone fa-lg me-3 fa-fw"></i>
+                                                <div className="form-outline flex-fill mb-0">
+                                                    <input type="number" id="phoneInput" name="phoneInput"
+                                                        className="form-control" placeholder='Phone Number' value={phoneNo} onChange={(e) => setPhoneNo(e.target.value)} required />
+                                                    <div className="form-notch">
+                                                        <div className="form-notch-leading" style={{ width: "9px" }}></div>
+                                                        <div className="form-notch-middle" style={{ width: "136px" }}></div>
+                                                        <div className="form-notch-trailing"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="d-flex flex-row align-items-center mb-4">
+                                                <i className="fas fa-envelope fa-lg me-3 fa-fw"></i>
+                                                <div className="form-outline flex-fill mb-0">
+                                                    <input type="email" id="emailInput" name="emailInput"
+                                                        className="form-control" placeholder='Your Email' value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                                    <div className="form-notch">
+                                                        <div className="form-notch-leading" style={{ width: "9px" }}></div>
+                                                        <div className="form-notch-middle" style={{ width: "69.6px" }}></div>
+                                                        <div className="form-notch-trailing"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="d-flex flex-row align-items-center mb-4">
+                                                <i className="fas fa-lock fa-lg me-3 fa-fw"></i>
+                                                <div className="form-outline flex-fill mb-0">
+                                                    <input type="password" id="passwordInput" name="passwordInput"
+                                                        className="form-control" placeholder='Enter Password' value={password} onChange={(e) => setPassword(e.target.value)} required />
+                                                    <div className="form-notch">
+                                                        <div className="form-notch-leading" style={{ width: "9px" }}></div>
+                                                        <div className="form-notch-middle" style={{ width: "64px" }}></div>
+                                                        <div className="form-notch-trailing"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="d-flex flex-row align-items-center mb-4">
+                                                <i className="fas fa-key fa-lg me-3 fa-fw"></i>
+                                                <div className="form-outline flex-fill mb-0">
+                                                    <input type="password" id="confirmPasswordInput"
+                                                        name="confirmPasswordInput" className="form-control" required placeholder='Repeat your
+                                                        password' value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} />
+                                                    <div className="form-notch">
+                                                        <div className="form-notch-leading" style={{ width: '9px' }}></div>
+                                                        <div className="form-notch-middle" style={{ width: '136px' }}></div>
+                                                        <div className="form-notch-trailing"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-center mt-4 pt-2">
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-primary btn-lg"
+                                                    style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+                                                    id="Registerbtn"
+                                                >
+                                                    Register
+                                                </button>
+                                                <p className="h5 fw-bold mt-2 pt-1 mb-0">Already a user? <a href="/login"
+                                                    className="link-danger">Login</a></p>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div className="container position-relative">
+                                        <div className="position-absolute top-0 end-0 me-5" id="div-alert">
+                                        </div>
+                                    </div>
+                                    <div className=" col-md-10 col-lg-6 col-xl-7 d-flex align-items-center order-1 order-lg-2">
+                                        <img src="signup-image.jpg" className="img-fluid ms-5" style={{ width: "400px " }} alt="sign up image" />
+                                    </div>
+
                                 </div>
-                                <div className="form-group">
-                                    <input type="file" name="avatar" id="avatar" accept="image/*" onChange={handleAvatarChange} />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="pno"><i className="zmdi zmdi-email"></i></label>
-                                    <input type="number" name="pno" id="pno" placeholder="Your Phone No" value={phoneNo} onChange={(e) => setPhoneNo(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="email"><i className="zmdi zmdi-email"></i></label>
-                                    <input type="email" name="email" id="email" placeholder="Your Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="pass"><i className="zmdi zmdi-lock"></i></label>
-                                    <input type="password" name="pass" id="pass" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="re-pass"><i className="zmdi zmdi-lock-outline"></i></label>
-                                    <input type="password" name="re_pass" id="re_pass" placeholder="Repeat your password" value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <input type="checkbox" name="agree-term" id="agree-term" className="agree-term" />
-                                    <label htmlFor="agree-term" className="label-agree-term"><span><span></span></span>I agree all
-                                        statements in <a href="#" className="term-service">Terms of service</a></label>
-                                </div>
-                                <div className="form-group form-button">
-                                    <input type="submit" name="signup" id="signup" className="form-submit" value="Register" />
-                                </div>
-                            </form>
-                        </div>
-                        <div className="signup-image">
-                            <figure><img src="signup-image.jpg" alt="sign up image" /></figure>
-                            <a href="/login" className="signup-image-link">I am already a member</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
     );
 };

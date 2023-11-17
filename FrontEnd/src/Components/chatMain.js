@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, } from 'react';
 import ChatList from './chatList';
 import ChatBox from './chatBox';
 import isEqual from 'lodash/isEqual';
 import ChatModal from './chatModal';
 import axios from 'axios';
 import MemberLisstModal from './memberLisstModal';
-import io from 'socket.io-client';
+import { useSocket } from '../Providers/Socket';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-const socket = io(process.env.REACT_APP_BACKEND_HOST_NAME);
+import { useNavigate } from 'react-router-dom';
 const ChatMain = () => {
+    const { socket } = useSocket();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [groupName, setGroupName] = useState('');
     const [contactName, setContactName] = useState('');
@@ -36,7 +37,6 @@ const ChatMain = () => {
                         "Authorization": token
                     }
                 });
-                console.log(result.data);
                 setChats(result.data);
             } catch (error) {
                 console.error(error);
@@ -44,7 +44,7 @@ const ChatMain = () => {
         };
 
         fetchData();
-    }, []);
+    }, [setChats]);
     useEffect(() => {
         try {
             socket.on('receive-message', (data) => {
@@ -92,7 +92,6 @@ const ChatMain = () => {
                     };
                     const updatedChats = chats.map(chat => {
                         if (chat.type === 'many' && chat.memberId === data.GroupNameDatumId) {
-                            console.log(chat);
                             const updatedChat = {
                                 ...chat,
                                 isMessage: chat.isMessage.map(msg => {
@@ -152,7 +151,6 @@ const ChatMain = () => {
                 }
                 else if (data.type === 'many') {
                     let userName;
-                    console.log(data);
                     if (data.userData.memberId === userId) {
                         userName = 'You'
                     }
@@ -291,15 +289,26 @@ const ChatMain = () => {
                     const updatedChats = chats.map(chat => {
                         if (chat.type === 'many' && chat.memberId === memberId) {
                             if (chat.isMessage) {
-                                const updatedChat = {
-                                    ...chat,
-                                    isMessage: chat.isMessage.map(msg => {
-                                        if (msg.userDatumId === userDatumId) {
-                                            return { ...msg, isMessage: false };
-                                        }
-                                        return msg;
-                                    })
-                                };
+                                let updatedChat
+                                if (chat.isMessage.length == 1) {
+                                    const [singleMessage] = chat.isMessage;
+                                    if (singleMessage.userDatumId === userDatumId) {
+                                        updatedChat = {
+                                            ...chat,
+                                            isMessage: [{ ...singleMessage, isMessage: false }],
+                                        };
+                                    };
+                                } else {
+                                    updatedChat = {
+                                        ...chat,
+                                        isMessage: chat.isMessage.map(msg => {
+                                            if (msg.userDatumId === userDatumId) {
+                                                return { ...msg, isMessage: false };
+                                            }
+                                            return msg;
+                                        })
+                                    };
+                                }
                                 return updatedChat;
                             }
                         }
@@ -317,7 +326,7 @@ const ChatMain = () => {
         }
     }, [chats])
 
-    const handleChatClick = async (chatId, displayName, type, id, lastSeen, profilePicture) => {
+    const handleChatClick = async (chatId, displayName, type, id, profilePicture) => {
         try {
             setType('')
             setType(type);
@@ -602,6 +611,7 @@ const ChatMain = () => {
             console.log(err);
         }
     }
+
     return (
         <div className="bg-gray-100">
             <div className="mx-auto flex flex-col lg:flex-row">
@@ -628,6 +638,8 @@ const ChatMain = () => {
                                 setIsLIstOpen(true)
                             }
                         }
+
+
                         onChatTypeClick={onChatTypeClick}
                     />
                 )}

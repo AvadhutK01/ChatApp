@@ -187,7 +187,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                         }
                         return (
                             <li key={chat.id} className="p-2 border-b border-gray-200 flex justify-between items-center">
-                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id, chat.lastSeen, chat.profilePicture)}>
+                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id, chat.profiePicture)}>
                                     <div className="flex items-center">
                                         <div className="pr-4">
                                             <img src={chat.profiePicture} alt="avatar 1" className="w-12 h-12 rounded-full" />

@@ -3,10 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const io = require('socket.io')(app.listen(4000), {
-    cors: {
-        origin: process.env.SOCKET_FRONT_HOST,
-        methods: ["GET", "POST"]
-    }
+    cors: true
 });
 const cors = require('cors');
 const path = require('path');

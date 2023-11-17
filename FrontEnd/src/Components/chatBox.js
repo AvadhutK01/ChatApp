@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin, onChatTypeClick }) => {
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessageSubmit, onFileSubmit, onMenuClick, type, isAdmin, onChatTypeClick, onAudioCall, onVideoCall }) => {
     const [messageText, setMessageText] = useState('');
     const [menuVisible, setMenuVisible] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const handleEmojiSelect = (emoji) => {
+        setMessageText((prevMessageText) => prevMessageText + emoji.native);
+    };
+
     const [chatType, setChatType] = useState('todayChat')
     const formattedDate = (date) => {
         return moment(date, 'DD/MM/YYYY, hh:mm:ss A').format('DD/MM/YYYY | hh:mm A');
@@ -42,13 +49,11 @@ const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessage
     const buttonText = chatType === 'todayChat' ? 'Archived Chat' : 'Today Chat';
     const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
     return (
-        <div className="lg:w-2/3 chat-box" id="myChatId">
+        <div className="lg:w-2/3 chat-list" id="myChatId">
             {memberId && (
-                <div className="text-center bg-white rounded border-1 h-12 d-flex justify-content-between align-items-center p-2">
-                    {
-                        profilePicture && (<img src={profilePicture}
-                            alt="avatar 1" className="w-12 h-12 rounded-full" />)
-                    }
+                <div className="text-center bg-white rounded border-1 h-12 d-flex justify-content-between align-items-center p-2 sticky top-0">
+                    <img src={profilePicture}
+                        alt="avatar 1" className="w-12 h-12 rounded-full" />
                     <span className="font-bold text-lg text-purple-500" id="DisplayName">{displayName}</span>
                     <div id="boxy">
                     </div>
@@ -98,7 +103,6 @@ const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessage
                                         <a
                                             href={message.fileUrl}
                                             download={message.fileName}
-                                        // className=""
                                         >
                                             <i className="fas fa-download mr-1"></i>
                                         </a>
@@ -111,8 +115,6 @@ const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessage
                                     </div>
                                 )}
                             </div>
-
-
                         )) ||
                         (type === 'many' && (
                             <div key={index} className={`d-flex flex-row justify-content-${message.senderId === userId ? 'end' : 'start'} pb-2`}>
@@ -151,7 +153,23 @@ const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessage
             />)}
             {memberId && (
                 <div className="p-4 bg-white sticky bottom-0">
+                    {showEmojiPicker && (
+                        <div style={{ position: 'fixed', top: '115px', zIndex: '999' }}>
+                            <Picker
+                                data={data}
+                                onEmojiSelect={handleEmojiSelect}
+                            />
+                        </div>
+
+                    )}
                     <div className="flex items-center">
+                        <button
+                            type="button"
+                            className="bg-purple-500 text-white py-2 px-4 me-2 rounded"
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        >
+                            <i className="far fa-smile"></i>
+                        </button>
                         <input type="text" className="form-control flex-1 mr-4" placeholder="Type message"
                             value={messageText} onChange={(e) => setMessageText(e.target.value)} />
                         <button type="button" className="bg-purple-500 text-white py-2 px-4 me-2 rounded" onClick={handlePaperClipClick}>
@@ -167,4 +185,3 @@ const ChatBox = ({ memberId, displayName, profilePicture, chatContent, onMessage
 };
 
 export default ChatBox;
-
