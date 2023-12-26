@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Link } from 'react-router-dom';
 const styles = {
     divider: {
         content: '""',
@@ -16,6 +17,7 @@ const styles = {
         height: '100%',
     },
 };
+
 const LoginForm = () => {
     const [phoneNo, setPhoneNo] = useState('');
     const [password, setPassword] = useState('');
@@ -97,7 +99,6 @@ const LoginForm = () => {
         }
       `}
             </style>
-            <ToastContainer />
             <div className="container h-custom position-relative">
                 <div className="position-absolute top-0 end-0 me-5" id="div-alert"></div>
                 <div className="row d-flex justify-content-center align-items-center h-100">
@@ -141,8 +142,8 @@ const LoginForm = () => {
                                 <button type="submit" id="btnSubmit" className="btn btn-primary btn-lg"
                                     style={{ paddingLeft: "2.5rem", paddingRight: "2.5rem" }}
                                 >Login</button>
-                                <p className="h5 fw-bold mt-2 pt-1 mb-0">Don't have an account? <a href="/"
-                                    className="link-danger">Register</a></p>
+                                <p className="h5 fw-bold mt-2 pt-1 mb-0">Don't have an account? <Link to="/register"
+                                    className="link-danger">Register</Link></p>
                             </div>
 
                         </form>

@@ -2,9 +2,20 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../AuthProviders/AuthContext';
+
 const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) => {
     const [latestMessages, setLatestMessages] = useState([]);
     const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
+    const { logout } = useAuth();
+    const [searchInput, setSearchInput] = useState('');
+    const [filteredChats, setFilteredChats] = useState([]);
+
+    useEffect(() => {
+        setFilteredChats(chats);
+    }, [chats]);
     useEffect(() => {
         try {
             if (latestMessageFromMember) {
@@ -34,7 +45,7 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                     }
 
                     if (latestMessageFromMember.recipeintId) {
-                        if (messageInfo.recipeintId == latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId == messageInfo.recipeintId) {
+                        if (messageInfo.recipeintId === latestMessageFromMember.recipeintId || latestMessageFromMember.userDatumId === messageInfo.recipeintId) {
                             if (latestMessageFromMember.fileName && latestMessageFromMember.fileUrl) {
                                 return {
                                     userId: latestMessageFromMember.userDatumId,
@@ -61,7 +72,15 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
             }
         }
         catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }, [latestMessageFromMember]);
 
@@ -69,7 +88,6 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
         const fetchLatestMessages = async () => {
             const latestMessagesArray = [];
             try {
-
                 for (const chat of chats) {
                     try {
                         const latestMessage = await getLatestMessage(chat.memberId);
@@ -122,12 +140,28 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
                             });
                         }
                     } catch (error) {
-                        console.log(error);
+                        toast.error("Internal Server Error!", {
+                            position: toast.POSITION.TOP_RIGHT,
+                            autoClose: 1000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
                     }
                 }
                 setLatestMessages(latestMessagesArray);
             } catch (error) {
-                console.log(error)
+                toast.error("Internal Server Error!", {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 1000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
             }
         };
 
@@ -143,7 +177,15 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
             });
             return chatMessages[0];
         } catch (error) {
-            console.error(error);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
             return null;
         }
     };
@@ -157,65 +199,147 @@ const ChatList = ({ chats, onChatClick, onMenuClick, latestMessageFromMember }) 
             });
             return response.data;
         } catch (error) {
-            console.error(error);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
             return [];
         }
     };
+    const handleLogout = () => {
+        logout();
+    };
+
+    const handleSearchInputChange = (e) => {
+        setSearchInput(e.target.value);
+    };
+
+    const handleSearchClick = () => {
+        const filteredChats = chats.filter(chat =>
+            chat.name.toLowerCase().includes(searchInput.toLowerCase())
+        );
+        setFilteredChats(filteredChats);
+    }
+
     return (
         <div className="lg:w-1/3 chat-list border-r border-gray-300 flex flex-col justify-between">
             <div className="p-4 bg-white rounded">
-                <div className="fixed bottom-10" style={{ marginLeft: '25%' }}>
-                    <button className="bg-purple-500 text-white py-2 px-3 mb-3 rounded-circle shadow-lg"
-                        id="add-member" onClick={onMenuClick}>
+                <div className="mb-3 flex">
+                    <div className="navbar-nav ml-auto">
+                        <div className="d-flex align-items-center pe-2">
+                            <button className="btn btn-outline-danger" onClick={handleLogout}>
+                                <i className="fa-solid fa-power-off"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input
+                        type="text"
+                        className="border border-gray-300 p-2 rounded-md focus:outline-none focus:border-purple-500"
+                        placeholder="Search..."
+                        value={searchInput}
+                        onChange={handleSearchInputChange}
+                    />
+                    <button className="bg-purple-500 text-white py-2 px-3 ml-2 rounded-md shadow-lg" onClick={handleSearchClick}>
+                        <i className="fa fa-search"></i>
+                    </button>
+                </div>
+                <div className="fixed bottom-10">
+                    <button
+                        className="bg-purple-500 text-white py-2 px-3 mb-3 rounded-circle shadow-lg"
+                        id="add-member"
+                        onClick={onMenuClick}
+                    >
                         <i className="fas fa-plus"></i>
                     </button>
                 </div>
                 <ul className="list-unstyled chat-list overflow-y-auto h-96" id="chat-list">
-                    {chats.map(chat => {
-                        const latestMessageInfo = latestMessages.find(item => item.chatId === chat.id);
-                        const messageTime = latestMessageInfo ? moment(latestMessageInfo.time, 'MMMM Do YYYY, h:mm:ss a') : null;
-                        const isToday = messageTime && messageTime.isSame(moment(), 'day');
-                        const formattedTime = latestMessageInfo && messageTime.isValid() ? (isToday ? messageTime.format('h:mm a') : messageTime.format('MMMM Do YYYY')) : 'N/A';
+                    {filteredChats.map((chat) => {
+                        let latestMessageInfo;
+                        if (chat.id) {
+                            latestMessageInfo = latestMessages.find(
+                                (item) => item.chatId === chat.id
+                            );
+                        }
+                        const messageTime = latestMessageInfo
+                            ? moment(latestMessageInfo.time, 'MMMM Do YYYY, h:mm:ss a')
+                            : null;
+                        const isToday =
+                            messageTime && messageTime.isSame(moment(), 'day');
+                        const formattedTime =
+                            latestMessageInfo && messageTime.isValid()
+                                ? isToday
+                                    ? messageTime.format('h:mm a')
+                                    : messageTime.format('MMMM Do YYYY')
+                                : 'N/A';
                         let matchedIsMessage = null;
                         if (chat.type === 'many') {
                             if (chat.isMessage) {
-                                const foundMessage = chat.isMessage.find(message => message.userDatumId === userId);
+                                const foundMessage = chat.isMessage.find(
+                                    (message) => message.userDatumId === userId
+                                );
                                 if (foundMessage) {
                                     matchedIsMessage = foundMessage.isMessage;
                                 }
                             }
                         }
                         return (
-                            <li key={chat.id} className="p-2 border-b border-gray-200 flex justify-between items-center">
-                                <button className="flex justify-between items-center w-full chat-button" onClick={() => onChatClick(chat.memberId, chat.name, chat.type, chat.id, chat.profiePicture)}>
-                                    <div className="flex items-center">
-                                        <div className="pr-4">
-                                            <img src={chat.profiePicture} alt="avatar 1" className="w-12 h-12 rounded-full" />
-                                            <p className="font-semibold mb-0">{chat.name}</p>
-                                            <p className="text-xs text-gray-500">
-                                                {latestMessageInfo ? latestMessageInfo.message : 'No messages yet'}
-                                            </p>
-                                            {(matchedIsMessage ? matchedIsMessage === true : chat.isMessage === 1) && (
-                                                <p className="bg-danger rounded-full float-end">N</p>
+                            chat.id !== undefined && (
+                                <li
+                                    key={chat.id}
+                                    className="p-2 border-b border-gray-200 flex justify-between items-center"
+                                >
+                                    <button
+                                        className="flex justify-between items-center w-full chat-button"
+                                        onClick={() =>
+                                            onChatClick(
+                                                chat.memberId,
+                                                chat.name,
+                                                chat.type,
+                                                chat.id,
+                                                chat.profiePicture
+                                            )
+                                        }
+                                    >
+                                        <div className="flex items-center">
+                                            <div className="pr-4">
+                                                <img
+                                                    src={chat.profiePicture}
+                                                    alt="avatar 1"
+                                                    className="w-10 h-10 rounded-full"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <p className="font-semibold mb-0">{chat.name}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {latestMessageInfo
+                                                        ? latestMessageInfo.message
+                                                        : 'No messages yet'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            {(matchedIsMessage ? matchedIsMessage === true : chat.isMessage === true) && (
+                                                <p className="bg-danger rounded-full px-1 text-sm">N</p>
                                             )}
+                                            <div className="text-xs text-gray-500 mb-1">
+                                                {formattedTime}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                        <div className="text-xs text-gray-500 mb-1">
-                                            {formattedTime}
-                                        </div>
-                                    </div>
-                                </button>
-                            </li>
-
-
+                                    </button>
+                                </li>
+                            )
                         );
                     })}
                 </ul>
-
             </div>
         </div>
     );
+
 };
 
 export default ChatList;

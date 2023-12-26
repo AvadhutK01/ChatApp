@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatList from './chatList';
 import ChatBox from './chatBox';
 import isEqual from 'lodash/isEqual';
@@ -8,7 +8,10 @@ import MemberLisstModal from './memberLisstModal';
 import { useSocket } from '../Providers/Socket';
 import moment from 'moment';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
+import LoadingBar from 'react-top-loading-bar'
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const ChatMain = () => {
     const { socket } = useSocket();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,8 +29,12 @@ const ChatMain = () => {
     const [isAdmin, setAdmin] = useState(false);
     const [isListOpen, setIsLIstOpen] = useState(false);
     const [MemberList, setMembersList] = useState([]);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [widthState, setWidthState] = useState(false);
     const [action, setAction] = useState('');
+    const [progress, setProgress] = useState(0)
     const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -39,12 +46,35 @@ const ChatMain = () => {
                 });
                 setChats(result.data);
             } catch (error) {
-                console.error(error);
+                toast.error("Internal Server Error!", {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 1000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
             }
         };
 
         fetchData();
     }, [setChats]);
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+            if (windowWidth > 1016) {
+                setWidthState(false)
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [windowWidth]);
+
     useEffect(() => {
         try {
             socket.on('receive-message', (data) => {
@@ -56,7 +86,7 @@ const ChatMain = () => {
                         recipeintId: data.recipeintId
                     };
                     const updatedChats = chats.map(chat => {
-                        if (chat.memberId === receivedMessage.userDatumId && chat.userDatumId === receivedMessage.recipeintId) {
+                        if (chat.memberId === receivedMessage.userDatumId && chat.userDatumId === receivedMessage.recipeintId && chat.memberId !== memberId) {
                             return { ...chat, isMessage: true };
                         }
                         return chat;
@@ -91,7 +121,7 @@ const ChatMain = () => {
                         userName: userName
                     };
                     const updatedChats = chats.map(chat => {
-                        if (chat.type === 'many' && chat.memberId === data.GroupNameDatumId) {
+                        if (chat.type === 'many' && chat.memberId === data.GroupNameDatumId && chat.memberId !== memberId) {
                             const updatedChat = {
                                 ...chat,
                                 isMessage: chat.isMessage.map(msg => {
@@ -129,7 +159,7 @@ const ChatMain = () => {
                         recipeintId: data.recipeintId
                     };
                     const updatedChats = chats.map(chat => {
-                        if (chat.memberId === receivedMessage.userDatumId && chat.userDatumId === receivedMessage.recipeintId) {
+                        if (chat.memberId === receivedMessage.userDatumId && chat.userDatumId === receivedMessage.recipeintId && chat.memberId !== memberId) {
                             return { ...chat, isMessage: true };
                         }
                         return chat;
@@ -166,7 +196,7 @@ const ChatMain = () => {
                         userName: userName
                     };
                     const updatedChats = chats.map(chat => {
-                        if (chat.type === 'many' && chat.memberId === data.GroupNameDatumId) {
+                        if (chat.type === 'many' && chat.memberId === data.GroupNameDatumId && chat.memberId !== memberId) {
                             const updatedChat = {
                                 ...chat,
                                 isMessage: chat.isMessage.map(msg => {
@@ -200,7 +230,15 @@ const ChatMain = () => {
                 socket.off('receive-message');
             };
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }, [type, memberId, selectedChat, chatIdofMember, userId, chats, latestMessageFromMember, chats]);
     useEffect(() => {
@@ -229,9 +267,17 @@ const ChatMain = () => {
                 socket.off('addNewUser');
             }
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
-    }, [])
+    }, [chats])
     useEffect(() => {
         try {
             socket.on('setAdmin', (data => {
@@ -243,9 +289,17 @@ const ChatMain = () => {
                 socket.off('setAdmin');
             }
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
-    }, [])
+    }, [isAdmin])
 
     useEffect(() => {
         try {
@@ -265,16 +319,25 @@ const ChatMain = () => {
                 socket.off('removeMember');
             };
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }, [chats]);
 
     useEffect(() => {
         try {
-            socket.on('setMessagefalse', (data => {
+            socket.on('setMessagefalse', (async (data) => {
                 if (data.type === 'one') {
                     const userDatumId = data.userDatumId;
                     const memberId = data.memberId;
+
                     const updatedChats = chats.map(chat => {
                         if (chat.memberId === memberId && chat.userDatumId === userDatumId) {
                             return { ...chat, isMessage: false };
@@ -322,12 +385,25 @@ const ChatMain = () => {
             }
         }
         catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }, [chats])
-
+    const onBackButtonClick = () => {
+        setWidthState(false)
+    }
     const handleChatClick = async (chatId, displayName, type, id, profilePicture) => {
         try {
+            if (windowWidth <= 1016) {
+                setWidthState(true)
+            }
             setType('')
             setType(type);
             setprofilePicture(profilePicture);
@@ -335,7 +411,15 @@ const ChatMain = () => {
             await fetchChat(chatId);
             setchatIdofMember(id);
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     };
     const handleAddGroup = async (file) => {
@@ -353,7 +437,15 @@ const ChatMain = () => {
             socket.emit('newMember', result.data);
             setGroupName('');
         } catch (error) {
-            console.log(error);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     };
     const handleAddContact = async () => {
@@ -369,11 +461,18 @@ const ChatMain = () => {
             setContactName('');
             setPhoneNumber('');
         } catch (error) {
-            console.log(error)
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
 
     };
-
     const handleMessageSubmit = async (messageText) => {
         try {
             const currentDateTime = moment().format('DD/MM/YYYY, hh:mm:ss A')
@@ -397,7 +496,15 @@ const ChatMain = () => {
                 socket.emit('send-message', messageData);
             }
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     };
 
@@ -411,27 +518,39 @@ const ChatMain = () => {
             formData.append('filename', fileName);
             formData.append('currentDateTime', currentDateTime);
             if (type === 'one') {
+                setProgress(30)
                 const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-file`, formData, {
                     headers: {
                         'Authorization': localStorage.getItem('token'),
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+                setProgress(100)
                 const fileData = { recipeintId: memberId, date: currentDateTime, fileName: fileName, fileUrl: response.data.fileUrl, userDatumId: userId, type: type, userData: response.data }
                 socket.emit('send-file', fileData);
             }
             else if (type === 'many') {
+                setProgress(30)
                 const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST_NAME}/chat/add-fileToGroup`, formData, {
                     headers: {
                         'Authorization': localStorage.getItem('token'),
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+                setProgress(100)
                 const fileData = { GroupNameDatumId: memberId, date: currentDateTime, fileName: fileName, fileUrl: response.data.fileUrl, senderId: userId, type: type, userData: response.data }
                 socket.emit('send-file', fileData);
             }
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
 
@@ -460,7 +579,15 @@ const ChatMain = () => {
             setIsLIstOpen(false);
         }
         catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
     const PerformActionToContact = async (name) => {
@@ -474,7 +601,15 @@ const ChatMain = () => {
             setIsLIstOpen(false);
             window.location = `/chatMain`;
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
 
@@ -512,7 +647,15 @@ const ChatMain = () => {
             }
         }
         catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
     async function fetchChat(chatId) {
@@ -560,7 +703,15 @@ const ChatMain = () => {
                 socket.emit('setMessagefalse', data);
             }
         } catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
     async function onChatTypeClick(chatType) {
@@ -608,20 +759,32 @@ const ChatMain = () => {
             }
         }
         catch (err) {
-            console.log(err);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
-
     return (
         <div className="bg-gray-100">
             <div className="mx-auto flex flex-col lg:flex-row">
-                <ChatList
+                <LoadingBar
+                    color='#f11946'
+                    progress={progress}
+                    onLoaderFinished={() => setProgress(0)}
+                />
+                {(widthState == false && <ChatList
                     chats={chats}
                     onChatClick={handleChatClick}
                     onMenuClick={() => setIsModalOpen(true)}
                     latestMessageFromMember={latestMessageFromMember}
-                />
-                {selectedChat && (
+                />)}
+                {(windowWidth > 1016 || selectedChat != []) && (widthState === true || selectedChat != []) && (
                     <ChatBox
                         displayName={displayName}
                         profilePicture={profilePicture}
@@ -638,9 +801,8 @@ const ChatMain = () => {
                                 setIsLIstOpen(true)
                             }
                         }
-
-
                         onChatTypeClick={onChatTypeClick}
+                        onBackButtonClick={onBackButtonClick}
                     />
                 )}
                 <ChatModal

@@ -1,8 +1,8 @@
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import RouteDefinations from './Routes/RouteDefinations';
+import { AuthProvider } from './AuthProviders/AuthContext';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -25,7 +25,9 @@ function App() {
   return (
     <div className="App">
       <ErrorBoundary>
-        <RouteDefinations />
+        <AuthProvider>
+          <RouteDefinations />
+        </AuthProvider>
       </ErrorBoundary>
     </div>
   );

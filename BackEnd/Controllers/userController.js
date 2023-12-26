@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const moment = require("moment/moment");
 const crypto = require('crypto');
 const AWS = require('aws-sdk');
+
+//Adding new user
 module.exports.RegisterUser = async (req, res) => {
     const newName = req.body.name;
     const newPhoneNO = req.body.phoneNo;
@@ -50,6 +52,7 @@ module.exports.RegisterUser = async (req, res) => {
     }
 }
 
+//checking and authenticating user from database
 module.exports.verifyLogin = async (req, res) => {
     const phoneNO = req.body.phoneNo;
     const password = req.body.password;
@@ -82,10 +85,14 @@ module.exports.verifyLogin = async (req, res) => {
     }
 }
 
+//helper functions
+
+//generating access token
 function generateAccessToken(id) {
     return jwt.sign({ userid: id }, process.env.SECRETKEY);
 }
 
+//generating random number
 function getRandomInt(min, max) {
     const buffer = crypto.randomBytes(4);
     const randomNumber = buffer.readUInt32LE(0);

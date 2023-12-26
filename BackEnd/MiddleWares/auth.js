@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const userDb = require("../Models/UserModel");
+
+//Authenticating user by decoding jwt token and checking against database
 const authnticateUser = async (req, res, next) => {
+    console.log(req.header('Authorization'));
     try {
         const token = req.header('Authorization');
         const user = jwt.verify(token, process.env.SECRETKEY);

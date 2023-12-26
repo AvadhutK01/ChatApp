@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Link } from 'react-router-dom';
 const SignupForm = () => {
     const [name, setName] = useState('');
     const [phoneNo, setPhoneNo] = useState('');
@@ -66,13 +67,11 @@ const SignupForm = () => {
                     progress: undefined,
                 });
             }
-            console.error(error);
         }
 
     }
     return (
         <div className=" container">
-            <ToastContainer />
             <div className="bg-white border rounded-5">
                 <div className="row">
                     <div className="col-12">
@@ -168,8 +167,8 @@ const SignupForm = () => {
                                                 >
                                                     Register
                                                 </button>
-                                                <p className="h5 fw-bold mt-2 pt-1 mb-0">Already a user? <a href="/login"
-                                                    className="link-danger">Login</a></p>
+                                                <p className="h5 fw-bold mt-2 pt-1 mb-0">Already a user? <Link to="/"
+                                                    className="link-danger">Login</Link></p>
                                             </div>
                                         </form>
                                     </div>

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ChatModal = ({
     isModalOpen,
@@ -25,7 +27,15 @@ const ChatModal = ({
             setActiveButton('contact');
             onClose();
         } catch (error) {
-            console.error(error);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     };
 
@@ -35,7 +45,15 @@ const ChatModal = ({
             setActiveButton('group');
             onClose();
         } catch (error) {
-            console.error(error);
+            toast.error("Internal Server Error!", {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     };
 

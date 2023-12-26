@@ -1,7 +1,8 @@
 import { React, useState } from 'react';
-
+import { jwtDecode } from 'jwt-decode';
 const MemberListModal = ({ showModal, closeModal, action, members, onGroupActionClick, onContactActionClick }) => {
     const [contactName, setContactName] = useState('');
+    const userId = localStorage.getItem('token') ? jwtDecode(localStorage.getItem('token')).userid : null
     const handleSaveContact = () => {
         onContactActionClick(contactName);
         closeModal();
@@ -84,26 +85,29 @@ const MemberListModal = ({ showModal, closeModal, action, members, onGroupAction
                                             action === 'addMember' && (
                                                 <>
                                                     {members.map((member, index) => (
+
                                                         <li className="list-group-item d-flex justify-content-between" key={index}>
                                                             {member.ContactName}
                                                             <button className="btn btn-primary" onClick={() => onGroupActionClick(member.memberId, action, member.ContactName)}>
                                                                 Add
                                                             </button>
                                                         </li>
-                                                    ))}
+                                                    )
+                                                    )}
                                                 </>
                                             )}
                                             {
                                                 action === 'removeMember' && (
                                                     <>
                                                         {members.map((member, index) => (
-                                                            <li className="list-group-item d-flex justify-content-between" key={index}>
-                                                                {member.ContactName}
-                                                                <button className="btn btn-primary" onClick={() => onGroupActionClick(member.userDatumId, action)}>
-                                                                    Remove
-                                                                </button>
-                                                            </li>
-                                                        ))}
+                                                            member.userDatumId !== userId && (
+                                                                <li className="list-group-item d-flex justify-content-between" key={index}>
+                                                                    {member.ContactName}
+                                                                    <button className="btn btn-primary" onClick={() => onGroupActionClick(member.userDatumId, action)}>
+                                                                        Remove
+                                                                    </button>
+                                                                </li>
+                                                            )))}
                                                     </>
                                                 )}
                                             {
