@@ -60,7 +60,3 @@ To get the application running locally, you need to set up both the backend and 
     *   Install dependencies.
     *   Start the development server.
     *(See [Frontend README](./FrontEnd/README.md) for detailed instructions)*
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
