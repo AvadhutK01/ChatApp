@@ -35,8 +35,10 @@ module.exports.getChatList = async (req, res) => {
             ChatGroupMembersData.findAll({ where: { userDatumId: id }, transaction: t })
         ]);
 
+        // Instead of throwing an error, return empty array if nothing found
         if (chatlist.length === 0 && grouplist.length === 0) {
-            throw new Error("No chats found");
+            await t.commit();
+            return res.status(200).json([]); // <-- empty list
         }
 
         const chatPromises = chatlist.map(async item => {
@@ -54,7 +56,7 @@ module.exports.getChatList = async (req, res) => {
                 memberId: item.memberId,
                 type: item.type,
                 isMessage: item.isMessage,
-                profiePicture: memberProfile.profiePicture
+                profiePicture: memberProfile?.profiePicture || ''
             };
         });
 
@@ -85,18 +87,22 @@ module.exports.getChatList = async (req, res) => {
                 memberId: item.GroupNameDatumId,
                 isMessage: users,
                 type: item.type,
-                profiePicture: groupNameData.profiePicture
+                profiePicture: groupNameData?.profiePicture || ''
             };
         });
 
-        const [resolvedChatList, resolvedGroups] = await Promise.all([Promise.all(chatPromises), Promise.all(groupPromises)]);
+        const [resolvedChatList, resolvedGroups] = await Promise.all([
+            Promise.all(chatPromises),
+            Promise.all(groupPromises)
+        ]);
+
         const combinedList = resolvedChatList.concat(resolvedGroups);
 
         await t.commit();
-        return res.status(201).json(combinedList);
+        return res.status(200).json(combinedList);
     } catch (error) {
         await t.rollback();
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
@@ -170,15 +176,7 @@ module.exports.addGroup = async (req, res) => {
         const userName = req.user.name;
         const groupName = req.body.Groupname;
         const file = req.file;
-        const filename = req.file.originalname;
-
-        const s3Params = {
-            Bucket: 'chatfilebucket',
-            Key: filename,
-            Body: file.buffer,
-            ACL: 'public-read',
-        };
-        const s3UploadPromise = s3.upload(s3Params).promise();
+        const filename = file ? file.originalname : null;
 
         const group = await GroupNameData.create({
             id: getRandomInt(100000, 999999),
@@ -187,9 +185,25 @@ module.exports.addGroup = async (req, res) => {
             userDatumId: userId
         }, { transaction: t });
 
-        const s3Response = await s3UploadPromise;
-        group.profiePicture = s3Response.Location;
-        await group.save({ transaction: t });
+        let s3Location = '';
+
+        if (file) {
+            try {
+                const s3Params = {
+                    Bucket: 'chatfilebucket',
+                    Key: filename,
+                    Body: file.buffer,
+                    ACL: 'public-read',
+                };
+                const s3Response = await s3.upload(s3Params).promise();
+                s3Location = s3Response.Location;
+
+                group.profiePicture = s3Location;
+                await group.save({ transaction: t });
+            } catch (s3Error) {
+                console.error('S3 Upload Failed:', s3Error);
+            }
+        }
 
         const randomId = getRandomInt(100000, 999999);
         await ChatGroupMembersData.bulkCreate([{
@@ -208,7 +222,7 @@ module.exports.addGroup = async (req, res) => {
             }],
             memberId: group.id,
             ContactName: groupName,
-            profilePicture: s3Response.Location,
+            profilePicture: s3Location,
             type: "many",
             userDatumId: userId
         }];
@@ -217,10 +231,11 @@ module.exports.addGroup = async (req, res) => {
         return res.status(201).json(responseArray);
     } catch (error) {
         await t.rollback();
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 //Performing actions to group data such as adding members, removing members, updating role to admin.
 module.exports.performActionToGroup = async (req, res) => {

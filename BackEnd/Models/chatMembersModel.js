@@ -8,7 +8,11 @@ const ChatMembersData = sequelize.define('ChatMembersData', {
     },
     memberId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: true
+    },
+    userDatumId: {
+        type: Sequelize.INTEGER,
+        allowNull: true
     },
     ContactName: {
         type: Sequelize.STRING,

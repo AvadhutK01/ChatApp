@@ -12,27 +12,42 @@ module.exports.RegisterUser = async (req, res) => {
     const newPhoneNO = req.body.phoneNo;
     const newEmail = req.body.email;
     const newPasswordInput = req.body.password;
-    const transaction = await sequelize.transaction();
     const file = req.file;
-    const filename = req.file.originalname;
+    const filename = file ? file.originalname : null;
+    const transaction = await sequelize.transaction();
+
     try {
-        const s3 = new AWS.S3({
-            accessKeyId: process.env.IAM_USER_KEY,
-            secretAccessKey: process.env.IAM_USER_SECRET
-        });
-        const params = {
-            Bucket: 'chatfilebucket',
-            Key: filename,
-            Body: file.buffer,
-            ACL: 'public-read',
-        };
-        const s3Response = await s3.upload(params).promise();
+        let profilePictureUrl = '';
+
+        if (file) {
+            try {
+                const s3 = new AWS.S3({
+                    accessKeyId: process.env.IAM_USER_KEY,
+                    secretAccessKey: process.env.IAM_USER_SECRET
+                });
+
+                const params = {
+                    Bucket: 'chatfilebucket',
+                    Key: filename,
+                    Body: file.buffer,
+                    ACL: 'public-read',
+                };
+
+                const s3Response = await s3.upload(params).promise();
+                profilePictureUrl = s3Response.Location;
+            } catch (s3Error) {
+                console.error('S3 Upload Failed:', s3Error);
+                profilePictureUrl = ''; // fallback to empty string
+            }
+        }
+
         const hashedPassword = await bcrypt.hash(newPasswordInput, 10);
         const currentDateTime = moment().format('DD/MM/YYYY, hh:mm A');
+
         await userModel.create({
             id: getRandomInt(100000, 999999),
             name: newName,
-            profiePicture: s3Response.Location,
+            profiePicture: profilePictureUrl,
             phoneNO: newPhoneNO,
             email: newEmail,
             password: hashedPassword,
@@ -50,7 +65,7 @@ module.exports.RegisterUser = async (req, res) => {
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
-}
+};
 
 //checking and authenticating user from database
 module.exports.verifyLogin = async (req, res) => {
