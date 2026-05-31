@@ -27,10 +27,9 @@ module.exports.RegisterUser = async (req, res) => {
                 });
 
                 const params = {
-                    Bucket: 'chatfilebucket',
+                    Bucket: 'chatfilebuckett',
                     Key: filename,
-                    Body: file.buffer,
-                    ACL: 'public-read',
+                    Body: file.buffer
                 };
 
                 const s3Response = await s3.upload(params).promise();
